@@ -1,1 +1,39 @@
-target/
+# Rust
+/libneedle/target/
+**/*.rs.bk
+Cargo.lock
+!libneedle/Cargo.lock
+
+# Node.js
+/needleui/node_modules/
+/needleui/dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# SSL/TLS
+*.pem
+*.key
+*.crt
+host_key
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+*.lcov
+tarpaulin-report.html
