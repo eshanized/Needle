@@ -1,0 +1,17 @@
+[package]
+name = "needle-db"
+description = "Supabase integration layer for the Needle tunneling service"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+needle-common = { path = "../needle-common" }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }

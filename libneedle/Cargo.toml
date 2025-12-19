@@ -1,0 +1,39 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/needle-server",
+    "crates/needle-core",
+    "crates/needle-api",
+    "crates/needle-db",
+    "crates/needle-common",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+authors = ["Eshan Roy <eshanized@proton.me>"]
+license = "MIT"
+repository = "https://github.com/eshanized/needle"
+
+[workspace.dependencies]
+tokio = { version = "1", features = ["full"] }
+axum = "0.8"
+axum-extra = { version = "0.10", features = ["typed-header"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+russh = "0.46"
+russh-keys = "0.46"
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+thiserror = "2"
+dotenvy = "0.15"
+rand = "0.8"
+hex = "0.4"
+jsonwebtoken = "9"
+argon2 = "0.5"
+async-trait = "0.1"

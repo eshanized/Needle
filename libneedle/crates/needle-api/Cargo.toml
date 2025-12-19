@@ -1,0 +1,24 @@
+[package]
+name = "needle-api"
+description = "HTTP API layer for the Needle tunneling service"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+needle-common = { path = "../needle-common" }
+needle-db = { path = "../needle-db" }
+needle-core = { path = "../needle-core" }
+tokio = { workspace = true }
+axum = { workspace = true }
+axum-extra = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+jsonwebtoken = { workspace = true }
+argon2 = { workspace = true }
