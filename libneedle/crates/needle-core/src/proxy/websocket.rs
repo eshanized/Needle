@@ -33,9 +33,6 @@ pub async fn bridge(
     let (mut tunnel_read, mut tunnel_write) = tunnel_stream.into_split();
     let (mut client_read, mut client_write) = client_stream.into_split();
 
-    let mut total_up: usize = 0;
-    let mut total_down: usize = 0;
-
     let upstream = tokio::spawn(async move {
         let mut buf = [0u8; 8192];
         let mut bytes = 0usize;
@@ -96,8 +93,8 @@ pub async fn bridge(
         bytes
     });
 
-    total_up = upstream.await.unwrap_or(0);
-    total_down = downstream.await.unwrap_or(0);
+    let total_up = upstream.await.unwrap_or(0);
+    let total_down = downstream.await.unwrap_or(0);
 
     info!(
         up_bytes = total_up,

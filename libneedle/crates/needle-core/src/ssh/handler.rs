@@ -4,10 +4,9 @@
 use crate::tunnel::manager::TunnelManager;
 use async_trait::async_trait;
 use russh::server::{Auth, Handler, Msg, Session};
-use russh::{Channel, ChannelId, CryptoVec};
+use russh::{Channel, ChannelId};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::sync::RwLock;
 use tracing::{debug, error, info, warn};
 use uuid::Uuid;
@@ -50,8 +49,7 @@ impl SshSession {
     /// We use this to communicate tunnel URLs, errors, and status info
     /// since the client might be using a plain ssh command without our CLI.
     async fn send_message(session: &mut Session, channel: ChannelId, msg: &str) {
-        let data = CryptoVec::from(msg.as_bytes());
-        session.data(channel, data).unwrap_or(());
+        session.data(channel, msg.as_bytes().into()).unwrap_or(());
     }
 }
 
@@ -110,7 +108,7 @@ impl Handler for SshSession {
         &mut self,
         address: &str,
         port: &mut u32,
-        session: &mut Session,
+        _session: &mut Session,
     ) -> Result<bool, Self::Error> {
         info!(
             address = %address,
