@@ -49,7 +49,7 @@ impl SshSession {
     /// We use this to communicate tunnel URLs, errors, and status info
     /// since the client might be using a plain ssh command without our CLI.
     async fn send_message(session: &mut Session, channel: ChannelId, msg: &str) {
-        session.data(channel, msg.as_bytes().into()).unwrap_or(());
+        session.data(channel, msg.as_bytes().to_vec().into());
     }
 }
 

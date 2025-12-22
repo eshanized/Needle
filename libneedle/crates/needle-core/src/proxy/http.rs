@@ -9,7 +9,7 @@ use std::net::SocketAddr;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::time::{timeout, Duration};
-use tracing::{debug, error, warn};
+use tracing::debug;
 
 const PROXY_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 const PROXY_RESPONSE_TIMEOUT: Duration = Duration::from_secs(30);

@@ -5,7 +5,7 @@ use std::net::SocketAddr;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::time::{timeout, Duration};
-use tracing::{debug, error, info};
+use tracing::{debug, info};
 
 const WS_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 const WS_IDLE_TIMEOUT: Duration = Duration::from_secs(300);
@@ -23,7 +23,7 @@ const WS_MAX_TRANSFER: usize = 100 * 1024 * 1024; // 100MB per session
 /// clean up.
 pub async fn bridge(
     bind_addr: SocketAddr,
-    mut client_stream: TcpStream,
+    client_stream: TcpStream,
 ) -> Result<WebSocketStats, WebSocketError> {
     let tunnel_stream = timeout(WS_CONNECT_TIMEOUT, TcpStream::connect(bind_addr))
         .await
