@@ -1491,6 +1491,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "chrono",
+ "dotenvy",
  "http-body-util",
  "hyper",
  "hyper-util",

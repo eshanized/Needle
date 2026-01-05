@@ -33,6 +33,11 @@ const router = createRouter({
             name: 'tunnel-detail',
             component: () => import('@/views/TunnelDetail.vue'),
         },
+        {
+            path: '/settings',
+            name: 'settings',
+            component: () => import('@/views/Settings.vue'),
+        },
     ],
 })
 
