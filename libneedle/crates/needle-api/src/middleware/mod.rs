@@ -2,3 +2,4 @@
 // SPDX-License-Identifier: MIT
 
 pub mod auth;
+pub mod rate_limit;

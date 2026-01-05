@@ -10,10 +10,15 @@ pub struct User {
     pub id: Uuid,
     pub email: String,
     pub username: String,
+    #[serde(default = "default_provider")]
     pub auth_provider: String,
     pub tier: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+}
+
+fn default_provider() -> String {
+    "email".to_string()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -38,8 +43,11 @@ pub struct TunnelRequest {
     pub path: String,
     pub status_code: i32,
     pub latency_ms: i32,
+    pub request_size: Option<i32>,
+    pub response_size: Option<i32>,
     pub request_headers: Option<serde_json::Value>,
     pub response_headers: Option<serde_json::Value>,
+    pub client_ip: Option<String>,
     pub timestamp: DateTime<Utc>,
 }
 
@@ -47,8 +55,11 @@ pub struct TunnelRequest {
 pub struct ApiKey {
     pub id: Uuid,
     pub user_id: Uuid,
-    pub key_hash: String,
     pub name: String,
+    pub key_hash: String,
+    pub key_prefix: String,
+    pub scopes: Option<Vec<String>>,
     pub last_used: Option<DateTime<Utc>>,
+    pub expires_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
 }
