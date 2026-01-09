@@ -3,40 +3,7 @@
 
 <template>
   <div class="app-layout">
-    <aside class="sidebar">
-      <div class="sidebar-brand">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-          <path d="M2 17l10 5 10-5"/>
-          <path d="M2 12l10 5 10-5"/>
-        </svg>
-        Needle
-      </div>
-      <nav class="sidebar-nav">
-        <router-link to="/" class="sidebar-link" active-class="active">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-          </svg>
-          Dashboard
-        </router-link>
-        <router-link to="/tunnels" class="sidebar-link" active-class="active">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 14a1 1 0 01-.78-1.63l9.9-10.2a.5.5 0 01.86.46l-1.92 6.02A1 1 0 0013 10h7a1 1 0 01.78 1.63l-9.9 10.2a.5.5 0 01-.86-.46l1.92-6.02A1 1 0 0011 14H4z"/>
-          </svg>
-          Tunnels
-        </router-link>
-      </nav>
-      <div class="sidebar-footer">
-        <button class="btn btn-ghost" style="width: 100%;" @click="handleLogout">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-            <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          Sign out
-        </button>
-      </div>
-    </aside>
+    <Sidebar :user-email="authStore.user?.email" @logout="handleLogout" />
 
     <main class="main-content">
       <div class="page-header">
@@ -59,6 +26,23 @@
       </div>
 
       <template v-else>
+        <!-- quick actions row -->
+        <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+          <router-link :to="`/tunnels/${tunnel.id}/inspector`" class="btn btn-ghost">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            Traffic Inspector
+          </router-link>
+          <router-link :to="`/tunnels/${tunnel.id}/analytics`" class="btn btn-ghost">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            Analytics
+          </router-link>
+        </div>
+
         <div class="card" style="margin-bottom: 24px;">
           <h3 style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.05em;">
             Tunnel Details
@@ -120,6 +104,7 @@ import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useTunnelsStore } from '@/stores/tunnels'
+import Sidebar from '@/components/Sidebar.vue'
 import type { Tunnel } from '@/types'
 
 const route = useRoute()

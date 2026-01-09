@@ -38,6 +38,16 @@ const router = createRouter({
             name: 'settings',
             component: () => import('@/views/Settings.vue'),
         },
+        {
+            path: '/tunnels/:tunnelId/inspector',
+            name: 'inspector',
+            component: () => import('@/views/Inspector.vue'),
+        },
+        {
+            path: '/tunnels/:tunnelId/analytics',
+            name: 'analytics',
+            component: () => import('@/views/Analytics.vue'),
+        },
     ],
 })
 

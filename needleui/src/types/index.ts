@@ -30,8 +30,11 @@ export interface TunnelRequest {
   path: string
   status_code: number
   latency_ms: number
+  request_size: number | null
+  response_size: number | null
   request_headers: Record<string, string> | null
   response_headers: Record<string, string> | null
+  client_ip: string | null
   timestamp: string
 }
 
@@ -49,4 +52,12 @@ export interface CreateTunnelRequest {
 
 export interface ApiError {
   error: string
+}
+
+export interface ApiKey {
+  id: string
+  name: string
+  prefix: string
+  created_at: string
+  last_used: string | null
 }
