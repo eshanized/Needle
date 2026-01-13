@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 use needle_common::error::{NeedleError, Result};
-use needle_db::client::SupabaseClient;
+use crate::client::SupabaseClient;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DailyAnalytics {
@@ -26,16 +25,19 @@ pub async fn get_daily_stats(
     tunnel_id: &str,
     days: usize,
 ) -> Result<Vec<DailyAnalytics>> {
-    let stats: Vec<DailyAnalytics> = client
-        .from("analytics_daily")
-        .select("*")
-        .eq("tunnel_id", tunnel_id)
-        .order("date", false)
-        .limit(days)
-        .execute()
-        .await?
-        .json()
+    let value = client
+        .select(
+            "analytics_daily",
+            &[
+                ("tunnel_id", &format!("eq.{tunnel_id}")),
+                ("order", "date.desc"),
+                ("limit", &days.to_string()),
+            ],
+        )
         .await
+        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
+
+    let stats: Vec<DailyAnalytics> = serde_json::from_value(value)
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     Ok(stats)
@@ -47,18 +49,15 @@ pub async fn get_user_summary(
     client: &SupabaseClient,
     user_id: &str,
 ) -> Result<UserAnalyticsSummary> {
-    // fetch the user's tunnels first, then aggregate their analytics
-    let tunnels: Vec<serde_json::Value> = client
-        .from("tunnels")
-        .select("id")
-        .eq("user_id", user_id)
-        .execute()
-        .await?
-        .json()
+    // fetch the user's tunnels first
+    let tunnels_value = client
+        .select("tunnels", &[("user_id", &format!("eq.{user_id}")), ("select", "id")])
         .await
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
-    let tunnel_ids: Vec<String> = tunnels
+    let tunnel_ids: Vec<String> = tunnels_value
+        .as_array()
+        .unwrap_or(&vec![])
         .iter()
         .filter_map(|t| t.get("id").and_then(|v| v.as_str()).map(String::from))
         .collect();

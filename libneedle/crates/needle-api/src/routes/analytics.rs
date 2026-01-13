@@ -44,7 +44,8 @@ pub async fn user_summary(
     State(state): State<AppState>,
     Extension(claims): Extension<Claims>,
 ) -> impl IntoResponse {
-    match analytics::get_user_summary(&state.db, &claims.sub).await {
+    let user_id = claims.sub.to_string();
+    match analytics::get_user_summary(&state.db, &user_id).await {
         Ok(summary) => {
             (StatusCode::OK, Json(serde_json::json!({ "summary": summary }))).into_response()
         }

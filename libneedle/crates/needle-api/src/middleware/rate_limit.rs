@@ -19,7 +19,7 @@ use needle_common::rate_limit::RateLimiter;
 pub type RateLimiterMap = Arc<RwLock<std::collections::HashMap<String, RateLimiter>>>;
 
 const REQUESTS_PER_SECOND: f64 = 10.0;
-const BURST_SIZE: usize = 30;
+const BURST_SIZE: f64 = 30.0;
 
 /// Creates a new empty rate limiter map.
 pub fn new_rate_limiter_map() -> RateLimiterMap {
@@ -42,7 +42,7 @@ pub async fn rate_limit(
         let limiter = map
             .entry(ip.clone())
             .or_insert_with(|| RateLimiter::new(REQUESTS_PER_SECOND, BURST_SIZE));
-        limiter.try_acquire()
+        limiter.allow()
     };
 
     if !allowed {

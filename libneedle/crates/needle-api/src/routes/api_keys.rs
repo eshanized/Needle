@@ -42,7 +42,8 @@ pub async fn list(
     State(state): State<AppState>,
     Extension(claims): Extension<Claims>,
 ) -> impl IntoResponse {
-    match api_keys::find_by_user(&state.db, &claims.sub).await {
+    let user_id = claims.sub.to_string();
+    match api_keys::find_by_user(&state.db, &user_id).await {
         Ok(keys) => {
             let infos: Vec<KeyInfo> = keys
                 .iter()
@@ -75,7 +76,8 @@ pub async fn create(
     let prefix = raw_key[..8].to_string();
     let hash = hash_key(&raw_key);
 
-    match api_keys::create(&state.db, &claims.sub, &payload.name, &hash, &prefix).await {
+    let user_id = claims.sub.to_string();
+    match api_keys::create(&state.db, &user_id, &payload.name, &hash, &prefix).await {
         Ok(key) => {
             let resp = CreateKeyResponse {
                 key: raw_key,
@@ -98,7 +100,8 @@ pub async fn delete(
     Extension(claims): Extension<Claims>,
     axum::extract::Path(key_id): axum::extract::Path<String>,
 ) -> impl IntoResponse {
-    match api_keys::delete(&state.db, &claims.sub, &key_id).await {
+    let user_id = claims.sub.to_string();
+    match api_keys::delete(&state.db, &user_id, &key_id).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(e) => {
             error!(error = %e, "failed to delete api key");

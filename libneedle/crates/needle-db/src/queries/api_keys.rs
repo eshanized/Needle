@@ -2,22 +2,20 @@
 // SPDX-License-Identifier: MIT
 
 use needle_common::error::{NeedleError, Result};
-use needle_db::client::SupabaseClient;
-use needle_db::models::ApiKey;
+use crate::client::SupabaseClient;
+use crate::models::ApiKey;
 use serde_json::json;
 use tracing::info;
 
 /// Finds all API keys belonging to a user. We only return the prefix
 /// and metadata, never the full key (which we don't store).
 pub async fn find_by_user(client: &SupabaseClient, user_id: &str) -> Result<Vec<ApiKey>> {
-    let keys: Vec<ApiKey> = client
-        .from("api_keys")
-        .select("id,user_id,name,key_prefix,scopes,last_used,expires_at,created_at")
-        .eq("user_id", user_id)
-        .execute()
-        .await?
-        .json()
+    let value = client
+        .select("api_keys", &[("user_id", &format!("eq.{user_id}"))])
         .await
+        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
+
+    let keys: Vec<ApiKey> = serde_json::from_value(value)
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     Ok(keys)
@@ -39,52 +37,52 @@ pub async fn create(
         "key_prefix": key_prefix,
     });
 
-    let key: ApiKey = client
-        .from("api_keys")
-        .insert(&body)
-        .execute()
-        .await?
-        .json()
+    let value = client
+        .insert("api_keys", &body)
         .await
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
-    info!(user_id = %user_id, name = %name, "api key created");
-    Ok(key)
+    // supabase returns an array, grab the first item
+    let keys: Vec<ApiKey> = serde_json::from_value(value)
+        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
+
+    keys.into_iter()
+        .next()
+        .ok_or_else(|| NeedleError::Supabase("insert returned no data".to_string()))
 }
 
 /// Deletes an API key, but only if it belongs to the given user.
-/// Returns an error if the key doesn't exist or doesn't belong to them.
 pub async fn delete(
     client: &SupabaseClient,
     user_id: &str,
     key_id: &str,
 ) -> Result<()> {
     client
-        .from("api_keys")
-        .eq("id", key_id)
-        .eq("user_id", user_id)
-        .delete()
-        .execute()
-        .await?;
+        .delete(
+            "api_keys",
+            &[
+                ("id", &format!("eq.{key_id}")),
+                ("user_id", &format!("eq.{user_id}")),
+            ],
+        )
+        .await
+        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     info!(user_id = %user_id, key_id = %key_id, "api key deleted");
     Ok(())
 }
 
 /// Looks up an API key by its hash for authentication purposes.
-/// If found, we also update the last_used timestamp.
 pub async fn find_by_hash(
     client: &SupabaseClient,
     key_hash: &str,
 ) -> Result<Option<ApiKey>> {
-    let keys: Vec<ApiKey> = client
-        .from("api_keys")
-        .select("*")
-        .eq("key_hash", key_hash)
-        .execute()
-        .await?
-        .json()
+    let value = client
+        .select("api_keys", &[("key_hash", &format!("eq.{key_hash}"))])
         .await
+        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
+
+    let keys: Vec<ApiKey> = serde_json::from_value(value)
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     Ok(keys.into_iter().next())

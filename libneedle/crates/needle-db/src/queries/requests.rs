@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 use needle_common::error::{NeedleError, Result};
-use needle_db::client::SupabaseClient;
-use needle_db::models::TunnelRequest;
+use crate::client::SupabaseClient;
+use crate::models::TunnelRequest;
 use serde_json::json;
 
 /// Fetches recent requests for a tunnel, ordered newest first.
@@ -13,24 +13,26 @@ pub async fn find_recent(
     tunnel_id: &str,
     limit: usize,
 ) -> Result<Vec<TunnelRequest>> {
-    let requests: Vec<TunnelRequest> = client
-        .from("tunnel_requests")
-        .select("*")
-        .eq("tunnel_id", tunnel_id)
-        .order("timestamp", false)
-        .limit(limit)
-        .execute()
-        .await?
-        .json()
+    let value = client
+        .select(
+            "tunnel_requests",
+            &[
+                ("tunnel_id", &format!("eq.{tunnel_id}")),
+                ("order", "timestamp.desc"),
+                ("limit", &limit.to_string()),
+            ],
+        )
         .await
+        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
+
+    let requests: Vec<TunnelRequest> = serde_json::from_value(value)
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     Ok(requests)
 }
 
 /// Logs a request that passed through a tunnel. Called by the
-/// proxy layer after forwarding is complete so we have the
-/// response status and latency.
+/// proxy layer after forwarding is complete.
 pub async fn log_request(
     client: &SupabaseClient,
     tunnel_id: &str,
@@ -54,10 +56,9 @@ pub async fn log_request(
     });
 
     client
-        .from("tunnel_requests")
-        .insert(&body)
-        .execute()
-        .await?;
+        .insert("tunnel_requests", &body)
+        .await
+        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     Ok(())
 }
