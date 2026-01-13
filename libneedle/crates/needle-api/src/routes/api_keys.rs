@@ -113,7 +113,7 @@ pub async fn delete(
 /// Generates a random API key as a hex string (64 hex chars = 32 bytes).
 fn generate_key() -> String {
     let mut rng = rand::thread_rng();
-    let bytes: Vec<u8> = (0..32).map(|_| rng.gen()).collect();
+    let bytes: Vec<u8> = (0..32).map(|_| rng.r#gen()).collect();
     hex::encode(bytes)
 }
 
