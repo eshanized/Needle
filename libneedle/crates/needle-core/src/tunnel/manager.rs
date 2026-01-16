@@ -138,4 +138,8 @@ impl TunnelManager {
         }
         Err(NeedleError::ServerAtCapacity)
     }
+
+    pub fn db_client(&self) -> &SupabaseClient {
+        &self.db
+    }
 }

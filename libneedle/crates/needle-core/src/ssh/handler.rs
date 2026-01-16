@@ -15,18 +15,19 @@ use uuid::Uuid;
 /// SshSession instance which lives for the duration of that connection.
 ///
 /// The flow goes:
-/// 1. Client connects and authenticates (we accept all keys for now,
-///    API key validation will come later)
-/// 2. Client requests a tcpip-forward for some port
-/// 3. We create a tunnel in the TunnelManager, which gives us a local
+/// 1. Client connects and authenticates via API key in username
+///    Format: user_<API_KEY> where API_KEY is a 64-char hex string
+/// 2. We validate the API key against the database
+/// 3. Client requests a tcpip-forward for some port
+/// 4. We create a tunnel in the TunnelManager, which gives us a local
 ///    TCP listener on 127.0.0.1
-/// 4. When HTTP traffic comes in for that tunnel's subdomain, it gets
+/// 5. When HTTP traffic comes in for that tunnel's subdomain, it gets
 ///    proxied to the local listener, and we forward the bytes back
 ///    and forth through the SSH channel
 pub struct SshSession {
     tunnel_manager: Arc<RwLock<TunnelManager>>,
     client_ip: String,
-    user_id: Uuid,
+    user_id: Option<Uuid>,
     allocated_subdomains: Vec<String>,
     channels: HashMap<ChannelId, String>,
 }
@@ -39,7 +40,7 @@ impl SshSession {
         Self {
             tunnel_manager,
             client_ip,
-            user_id: Uuid::new_v4(),
+            user_id: None,
             allocated_subdomains: Vec::new(),
             channels: HashMap::new(),
         }
@@ -73,21 +74,67 @@ impl Drop for SshSession {
 impl Handler for SshSession {
     type Error = russh::Error;
 
-    /// We accept all public keys for now. In production this would
-    /// validate against stored user keys or require the username to
-    /// contain a valid API token.
+    /// Validates API key from username field.
+    /// Expected format: user_<API_KEY> where API_KEY is a 64-char hex string.
+    /// The key is hashed with SHA-256 and validated against the database.
     async fn auth_publickey(
         &mut self,
         user: &str,
         _public_key: &russh_keys::key::PublicKey,
     ) -> Result<Auth, Self::Error> {
         info!(user = %user, ip = %self.client_ip, "ssh auth attempt");
-        Ok(Auth::Accept)
+        
+        if let Some(user_id) = self.validate_api_key(user).await {
+            self.user_id = Some(user_id);
+            info!(user_id = %user_id, "ssh authentication successful");
+            Ok(Auth::Accept)
+        } else {
+            warn!(user = %user, ip = %self.client_ip, "ssh authentication failed");
+            Ok(Auth::Reject {
+                proceed_with_methods: Some(russh::MethodSet::PUBLICKEY),
+            })
+        }
     }
 
-    async fn auth_none(&mut self, user: &str) -> Result<Auth, Self::Error> {
-        debug!(user = %user, "auth_none, accepting for dev");
-        Ok(Auth::Accept)
+    /// Validates the API key extracted from the username.
+    /// Returns the user_id if valid, None otherwise.
+    async fn validate_api_key(&self, username: &str) -> Option<Uuid> {
+        use sha2::{Digest, Sha256};
+
+        // Extract API key from username (format: user_<KEY>)
+        let api_key = username.strip_prefix("user_")?;
+        
+        // Validate key format (64 hex chars)
+        if api_key.len() != 64 || !api_key.chars().all(|c| c.is_ascii_hexdigit()) {
+            warn!("invalid api key format in username");
+            return None;
+        }
+
+        // Hash the key
+        let mut hasher = Sha256::new();
+        hasher.update(api_key.as_bytes());
+        let key_hash = hex::encode(hasher.finalize());
+
+        // Query database
+        let db = {
+            let mgr = self.tunnel_manager.read().await;
+            mgr.db_client().clone()
+        };
+
+        match needle_db::queries::api_keys::find_by_hash(&db, &key_hash).await {
+            Ok(Some(api_key_record)) => {
+                info!("valid api key found for user {}", api_key_record.user_id);
+                Some(api_key_record.user_id)
+            }
+            Ok(None) => {
+                warn!("api key not found in database");
+                None
+            }
+            Err(e) => {
+                error!(error = %e, "database error during api key validation");
+                None
+            }
+        }
     }
 
     /// Called when the client opens a new session channel. We just accept
@@ -110,15 +157,25 @@ impl Handler for SshSession {
         port: &mut u32,
         _session: &mut Session,
     ) -> Result<bool, Self::Error> {
+        // Ensure user is authenticated
+        let user_id = match self.user_id {
+            Some(id) => id,
+            None => {
+                warn!(ip = %self.client_ip, "tcpip-forward requested without authentication");
+                return Ok(false);
+            }
+        };
+
         info!(
             address = %address,
             port = %port,
             ip = %self.client_ip,
+            user_id = %user_id,
             "tcpip-forward requested"
         );
 
         let mut manager = self.tunnel_manager.write().await;
-        match manager.create(&self.client_ip, self.user_id).await {
+        match manager.create(&self.client_ip, user_id).await {
             Ok(tunnel) => {
                 let subdomain = tunnel.subdomain.clone();
                 let bind_port = tunnel.bind_addr.port();
