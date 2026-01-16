@@ -37,3 +37,4 @@ host_key
 coverage/
 *.lcov
 tarpaulin-report.html
+PLAN.md
