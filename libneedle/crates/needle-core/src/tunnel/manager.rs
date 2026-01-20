@@ -48,17 +48,21 @@ impl TunnelManager {
         }
     }
 
-    /// Spins up a new tunnel by generating a unique subdomain, binding a local
-    /// TCP listener, and registering everything in both the in-memory map
-    /// and the database.
+    /// Spins up a new tunnel by optionally using a custom subdomain or generating
+    /// a unique one, binding a local TCP listener, and registering everything in
+    /// both the in-memory map and the database.
     ///
-    /// The flow goes: generate subdomain -> check limits -> bind listener ->
+    /// The flow goes: validate subdomain -> check limits -> bind listener ->
     /// save to database -> register in memory. If any step fails, we bail
     /// out early without leaving orphaned state.
     pub async fn create(
         &mut self,
         client_ip: &str,
         user_id: Uuid,
+        custom_subdomain: Option<String>,
+        target_port: i32,
+        protocol: &str,
+        is_persistent: bool,
     ) -> Result<Arc<ActiveTunnel>> {
         let ip_count = self.ip_counts.get(client_ip).copied().unwrap_or(0);
         if ip_count >= MAX_TUNNELS_PER_IP {
@@ -68,7 +72,16 @@ impl TunnelManager {
             return Err(NeedleError::ServerAtCapacity);
         }
 
-        let sub = self.generate_unique_subdomain()?;
+        let sub = if let Some(custom) = custom_subdomain {
+            // Use custom subdomain if provided
+            if self.tunnels.contains_key(&custom) {
+                return Err(NeedleError::SubdomainTaken(custom));
+            }
+            custom
+        } else {
+            // Generate unique subdomain
+            self.generate_unique_subdomain()?
+        };
 
         let listener = TcpListener::bind("127.0.0.1:0").await?;
         let bind_addr = listener.local_addr()?;
@@ -79,9 +92,9 @@ impl TunnelManager {
             &self.db,
             &user_id.to_string(),
             &sub,
-            bind_addr.port() as i32,
-            "http",
-            false,
+            target_port,
+            protocol,
+            is_persistent,
         )
         .await?;
 

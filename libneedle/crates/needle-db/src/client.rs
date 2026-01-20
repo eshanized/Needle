@@ -44,6 +44,7 @@ impl SupabaseClient {
             .query(query_params)
             .send()
             .await?
+            .error_for_status()?
             .json::<Value>()
             .await?;
 
@@ -70,6 +71,7 @@ impl SupabaseClient {
             .json(body)
             .send()
             .await?
+            .error_for_status()?
             .json::<Value>()
             .await?;
 
@@ -98,6 +100,7 @@ impl SupabaseClient {
             .json(body)
             .send()
             .await?
+            .error_for_status()?
             .json::<Value>()
             .await?;
 
@@ -121,6 +124,7 @@ impl SupabaseClient {
             .query(query_params)
             .send()
             .await?
+            .error_for_status()?
             .json::<Value>()
             .await?;
 

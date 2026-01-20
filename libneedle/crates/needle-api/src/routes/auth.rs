@@ -111,6 +111,14 @@ pub async fn login(
         }
     };
 
+    // Verify password hash
+    if !verify_password(&payload.password, &user.password_hash) {
+        return (
+            StatusCode::UNAUTHORIZED,
+            Json(json!({ "error": "invalid credentials" })),
+        );
+    }
+
     info!(email = %user.email, "user logged in");
 
     let token = match create_token(&state.jwt_secret, user.id, &user.email, &user.tier) {
@@ -176,4 +184,18 @@ fn hash_password(password: &str) -> Result<String, argon2::password_hash::Error>
     let argon2 = Argon2::default();
     let hash = argon2.hash_password(password.as_bytes(), &salt)?;
     Ok(hash.to_string())
+}
+
+fn verify_password(password: &str, hash: &str) -> bool {
+    use argon2::password_hash::PasswordHash;
+    use argon2::{Argon2, PasswordVerifier};
+
+    let parsed_hash = match PasswordHash::new(hash) {
+        Ok(h) => h,
+        Err(_) => return false,
+    };
+
+    Argon2::default()
+        .verify_password(password.as_bytes(), &parsed_hash)
+        .is_ok()
 }

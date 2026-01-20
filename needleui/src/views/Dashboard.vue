@@ -84,7 +84,7 @@
         <div v-for="tunnel in tunnelsStore.tunnels.slice(0, 5)" :key="tunnel.id" class="tunnel-card">
           <div class="tunnel-info">
             <div class="tunnel-subdomain">{{ tunnel.subdomain }}</div>
-            <div class="tunnel-url">{{ tunnel.url || `https://${tunnel.subdomain}.needle.dev` }}</div>
+            <div class="tunnel-url">{{ tunnel.url }}</div>
           </div>
           <div class="tunnel-status">
             <span :class="['status-dot', tunnel.is_active ? 'active' : 'inactive']"></span>

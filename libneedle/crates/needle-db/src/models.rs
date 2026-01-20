@@ -10,6 +10,8 @@ pub struct User {
     pub id: Uuid,
     pub email: String,
     pub username: String,
+    #[serde(skip_serializing)]
+    pub password_hash: String,
     #[serde(default = "default_provider")]
     pub auth_provider: String,
     pub tier: String,

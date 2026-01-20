@@ -70,11 +70,32 @@ async fn main() {
         .route("/api/analytics/summary", get(analytics::user_summary))
         .layer(axum_mw::from_fn_with_state(state.clone(), require_auth));
 
+    let cors_origin = env::var("CORS_ORIGIN")
+        .unwrap_or_else(|_| "http://localhost:5173".to_string())
+        .parse::<tower_http::cors::Any>()
+        .unwrap_or_else(|_| {
+            info!("using permissive CORS for development");
+            tower_http::cors::Any
+        });
+
+    let cors = CorsLayer::new()
+        .allow_origin(cors_origin)
+        .allow_methods([
+            axum::http::Method::GET,
+            axum::http::Method::POST,
+            axum::http::Method::DELETE,
+            axum::http::Method::PATCH,
+        ])
+        .allow_headers([
+            axum::http::header::AUTHORIZATION,
+            axum::http::header::CONTENT_TYPE,
+        ]);
+
     let app = Router::new()
         .merge(public_routes)
         .merge(protected_routes)
         .layer(axum_mw::from_fn_with_state(limiter_map, rate_limit::rate_limit))
-        .layer(CorsLayer::permissive())
+        .layer(cors)
         .layer(TraceLayer::new_for_http())
         .with_state(state);
 

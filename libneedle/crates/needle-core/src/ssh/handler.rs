@@ -52,6 +52,47 @@ impl SshSession {
     async fn send_message(session: &mut Session, channel: ChannelId, msg: &str) {
         session.data(channel, msg.as_bytes().to_vec().into());
     }
+
+    /// Validates the API key extracted from the username.
+    /// Returns the user_id if valid, None otherwise.
+    async fn validate_api_key(&self, username: &str) -> Option<Uuid> {
+        use sha2::{Digest, Sha256};
+
+        // Extract API key from username (format: user_<KEY>)
+        let api_key = username.strip_prefix("user_")?;
+        
+        // Validate key format (64 hex chars)
+        if api_key.len() != 64 || !api_key.chars().all(|c| c.is_ascii_hexdigit()) {
+            warn!("invalid api key format in username");
+            return None;
+        }
+
+        // Hash the key
+        let mut hasher = Sha256::new();
+        hasher.update(api_key.as_bytes());
+        let key_hash = hex::encode(hasher.finalize());
+
+        // Query database
+        let db = {
+            let mgr = self.tunnel_manager.read().await;
+            mgr.db_client().clone()
+        };
+
+        match needle_db::queries::api_keys::find_by_hash(&db, &key_hash).await {
+            Ok(Some(api_key_record)) => {
+                info!("valid api key found for user {}", api_key_record.user_id);
+                Some(api_key_record.user_id)
+            }
+            Ok(None) => {
+                warn!("api key not found in database");
+                None
+            }
+            Err(e) => {
+                error!(error = %e, "database error during api key validation");
+                None
+            }
+        }
+    }
 }
 
 impl Drop for SshSession {
@@ -96,47 +137,6 @@ impl Handler for SshSession {
         }
     }
 
-    /// Validates the API key extracted from the username.
-    /// Returns the user_id if valid, None otherwise.
-    async fn validate_api_key(&self, username: &str) -> Option<Uuid> {
-        use sha2::{Digest, Sha256};
-
-        // Extract API key from username (format: user_<KEY>)
-        let api_key = username.strip_prefix("user_")?;
-        
-        // Validate key format (64 hex chars)
-        if api_key.len() != 64 || !api_key.chars().all(|c| c.is_ascii_hexdigit()) {
-            warn!("invalid api key format in username");
-            return None;
-        }
-
-        // Hash the key
-        let mut hasher = Sha256::new();
-        hasher.update(api_key.as_bytes());
-        let key_hash = hex::encode(hasher.finalize());
-
-        // Query database
-        let db = {
-            let mgr = self.tunnel_manager.read().await;
-            mgr.db_client().clone()
-        };
-
-        match needle_db::queries::api_keys::find_by_hash(&db, &key_hash).await {
-            Ok(Some(api_key_record)) => {
-                info!("valid api key found for user {}", api_key_record.user_id);
-                Some(api_key_record.user_id)
-            }
-            Ok(None) => {
-                warn!("api key not found in database");
-                None
-            }
-            Err(e) => {
-                error!(error = %e, "database error during api key validation");
-                None
-            }
-        }
-    }
-
     /// Called when the client opens a new session channel. We just accept
     /// it and wait for further requests on that channel.
     async fn channel_open_session(
@@ -175,7 +175,17 @@ impl Handler for SshSession {
         );
 
         let mut manager = self.tunnel_manager.write().await;
-        match manager.create(&self.client_ip, user_id).await {
+        match manager
+            .create(
+                &self.client_ip,
+                user_id,
+                None,                       // No custom subdomain for SSH tunnels
+                *port as i32,               // Use requested port
+                "http",                     // Default protocol
+                false,                      // SSH tunnels are not persistent
+            )
+            .await
+        {
             Ok(tunnel) => {
                 let subdomain = tunnel.subdomain.clone();
                 let bind_port = tunnel.bind_addr.port();

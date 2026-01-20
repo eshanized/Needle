@@ -115,10 +115,33 @@ pub async fn forward_request(
         "received proxy response"
     );
 
+    // Parse HTTP status line to extract real status code
+    let status_code = parse_status_code(&response_buf).unwrap_or(StatusCode::BAD_GATEWAY);
+
     Ok(Response::builder()
-        .status(StatusCode::OK)
+        .status(status_code)
         .body(Full::new(Bytes::from(response_buf)))
         .expect("valid response"))
+}
+
+/// Parses the HTTP status code from a raw HTTP response buffer.
+/// Looks for the first line in format "HTTP/1.1 200 OK" and extracts the code.
+fn parse_status_code(response: &[u8]) -> Option<StatusCode> {
+    // Convert to string to parse status line
+    let response_str = std::str::from_utf8(response).ok()?;
+    
+    // Find first line (status line)
+    let status_line = response_str.lines().next()?;
+    
+    // Parse format: "HTTP/1.1 200 OK"
+    let parts: Vec<&str> = status_line.split_whitespace().collect();
+    if parts.len() < 2 {
+        return None;
+    }
+    
+    // Second part should be the status code
+    let code: u16 = parts[1].parse().ok()?;
+    StatusCode::from_u16(code).ok()
 }
 
 /// Builds a plain-text error response for when the proxy can't reach
