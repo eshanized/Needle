@@ -16,7 +16,7 @@ use crate::state::AppState;
 #[derive(Deserialize)]
 pub struct CreateTunnelRequest {
     pub subdomain: Option<String>,
-    pub target_port: u32,
+    pub target_port: Option<u32>,
     pub protocol: Option<String>,
     pub is_persistent: Option<bool>,
 }
@@ -84,7 +84,7 @@ pub async fn create(
             &claims.sub.to_string(),
             claims.sub,
             custom_subdomain,
-            payload.target_port.unwrap_or(80) as i32,
+            payload.target_port.unwrap_or(80),
             &payload.protocol.unwrap_or_else(|| "http".to_string()),
             payload.is_persistent.unwrap_or(false),
         )
