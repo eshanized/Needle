@@ -84,7 +84,7 @@ pub async fn create(
             &claims.sub.to_string(),
             claims.sub,
             custom_subdomain,
-            payload.target_port.unwrap_or(80),
+            payload.target_port.unwrap_or(80) as i32,
             &payload.protocol.unwrap_or_else(|| "http".to_string()),
             payload.is_persistent.unwrap_or(false),
         )
