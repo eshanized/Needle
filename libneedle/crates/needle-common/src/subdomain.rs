@@ -6,17 +6,15 @@ use std::collections::HashSet;
 use std::sync::LazyLock;
 
 const ADJECTIVES: &[&str] = &[
-    "brave", "calm", "dark", "eager", "fair", "glad", "happy", "keen",
-    "light", "mild", "neat", "pale", "quick", "rare", "safe", "tall",
-    "vast", "warm", "bold", "cool", "deep", "fast", "gold", "kind",
-    "live", "pure", "rich", "slim", "soft", "wise",
+    "brave", "calm", "dark", "eager", "fair", "glad", "happy", "keen", "light", "mild", "neat",
+    "pale", "quick", "rare", "safe", "tall", "vast", "warm", "bold", "cool", "deep", "fast",
+    "gold", "kind", "live", "pure", "rich", "slim", "soft", "wise",
 ];
 
 const NOUNS: &[&str] = &[
-    "bear", "crow", "deer", "dove", "eagle", "fawn", "goat", "hawk",
-    "ibis", "jade", "kite", "lark", "moth", "newt", "orca", "puma",
-    "quail", "reef", "seal", "tern", "vole", "wolf", "wren", "yak",
-    "bass", "crab", "duck", "elm", "frog", "gull",
+    "bear", "crow", "deer", "dove", "eagle", "fawn", "goat", "hawk", "ibis", "jade", "kite",
+    "lark", "moth", "newt", "orca", "puma", "quail", "reef", "seal", "tern", "vole", "wolf",
+    "wren", "yak", "bass", "crab", "duck", "elm", "frog", "gull",
 ];
 
 static ADJECTIVE_SET: LazyLock<HashSet<&'static str>> =
@@ -104,7 +102,11 @@ mod tests {
     #[test]
     fn generated_subdomains_are_unique() {
         let subs: HashSet<String> = (0..50).map(|_| generate()).collect();
-        assert_eq!(subs.len(), 50, "50 generated subdomains should all be unique");
+        assert_eq!(
+            subs.len(),
+            50,
+            "50 generated subdomains should all be unique"
+        );
     }
 
     #[test]

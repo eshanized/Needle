@@ -70,9 +70,7 @@ impl NeedleConfig {
 
 fn required(key: &str) -> String {
     env::var(key).unwrap_or_else(|_| {
-        panic!(
-            "{key} is required but not set. check your .env file or environment variables."
-        )
+        panic!("{key} is required but not set. check your .env file or environment variables.")
     })
 }
 

@@ -1,10 +1,10 @@
 // Author : Eshan Roy <eshanized@proton.me>
 // SPDX-License-Identifier: MIT
 
+use axum::Json;
 use axum::extract::{Extension, Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::Json;
 use serde::Deserialize;
 use tracing::error;
 
@@ -28,12 +28,14 @@ pub async fn tunnel_stats(
     let days = query.days.unwrap_or(30).min(90);
 
     match analytics::get_daily_stats(&state.db, &tunnel_id, days).await {
-        Ok(stats) => {
-            (StatusCode::OK, Json(serde_json::json!({ "stats": stats }))).into_response()
-        }
+        Ok(stats) => (StatusCode::OK, Json(serde_json::json!({ "stats": stats }))).into_response(),
         Err(e) => {
             error!(error = %e, "failed to fetch tunnel analytics");
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": "failed to fetch analytics" }))).into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({ "error": "failed to fetch analytics" })),
+            )
+                .into_response()
         }
     }
 }
@@ -46,12 +48,18 @@ pub async fn user_summary(
 ) -> impl IntoResponse {
     let user_id = claims.sub.to_string();
     match analytics::get_user_summary(&state.db, &user_id).await {
-        Ok(summary) => {
-            (StatusCode::OK, Json(serde_json::json!({ "summary": summary }))).into_response()
-        }
+        Ok(summary) => (
+            StatusCode::OK,
+            Json(serde_json::json!({ "summary": summary })),
+        )
+            .into_response(),
         Err(e) => {
             error!(error = %e, "failed to fetch user analytics");
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": "failed to fetch analytics" }))).into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({ "error": "failed to fetch analytics" })),
+            )
+                .into_response()
         }
     }
 }

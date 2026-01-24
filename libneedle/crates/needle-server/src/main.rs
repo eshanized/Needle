@@ -4,9 +4,9 @@
 use std::env;
 use std::sync::Arc;
 
+use axum::Router;
 use axum::middleware as axum_mw;
 use axum::routing::{delete, get, post};
-use axum::Router;
 use tokio::net::TcpListener;
 use tokio::sync::RwLock;
 use tower_http::cors::CorsLayer;
@@ -65,21 +65,30 @@ async fn main() {
         .route("/api/tunnels/{subdomain}", delete(tunnels::delete))
         .route("/api/keys", get(api_keys::list).post(api_keys::create))
         .route("/api/keys/{key_id}", delete(api_keys::delete))
-        .route("/api/tunnels/{tunnel_id}/requests", get(inspector::list_requests))
-        .route("/api/tunnels/{tunnel_id}/analytics", get(analytics::tunnel_stats))
+        .route(
+            "/api/tunnels/{tunnel_id}/requests",
+            get(inspector::list_requests),
+        )
+        .route(
+            "/api/tunnels/{tunnel_id}/analytics",
+            get(analytics::tunnel_stats),
+        )
         .route("/api/analytics/summary", get(analytics::user_summary))
         .layer(axum_mw::from_fn_with_state(state.clone(), require_auth));
 
-    let cors_origin = env::var("CORS_ORIGIN")
-        .unwrap_or_else(|_| "http://localhost:5173".to_string())
-        .parse::<tower_http::cors::Any>()
-        .unwrap_or_else(|_| {
-            info!("using permissive CORS for development");
-            tower_http::cors::Any
-        });
+    // Configure CORS - default to localhost for dev, require explicit origin for prod
+    let cors_origin =
+        env::var("CORS_ORIGIN").unwrap_or_else(|_| "http://localhost:5173".to_string());
 
     let cors = CorsLayer::new()
-        .allow_origin(cors_origin)
+        .allow_origin(
+            cors_origin
+                .parse::<axum::http::HeaderValue>()
+                .unwrap_or_else(|_| {
+                    info!("invalid CORS_ORIGIN, using localhost");
+                    "http://localhost:5173".parse().unwrap()
+                }),
+        )
         .allow_methods([
             axum::http::Method::GET,
             axum::http::Method::POST,
@@ -94,7 +103,10 @@ async fn main() {
     let app = Router::new()
         .merge(public_routes)
         .merge(protected_routes)
-        .layer(axum_mw::from_fn_with_state(limiter_map, rate_limit::rate_limit))
+        .layer(axum_mw::from_fn_with_state(
+            limiter_map,
+            rate_limit::rate_limit,
+        ))
         .layer(cors)
         .layer(TraceLayer::new_for_http())
         .with_state(state);
@@ -102,7 +114,10 @@ async fn main() {
     let listener = TcpListener::bind(&api_addr).await.expect("failed to bind");
     info!(addr = %api_addr, "needle api server starting");
 
-    axum::serve(listener, app.into_make_service_with_connect_info::<std::net::SocketAddr>())
-        .await
-        .expect("server crashed");
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .await
+    .expect("server crashed");
 }

@@ -8,7 +8,7 @@ use hyper::{Request, Response, StatusCode};
 use std::net::SocketAddr;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
-use tokio::time::{timeout, Duration};
+use tokio::time::{Duration, timeout};
 use tracing::debug;
 
 const PROXY_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
@@ -110,10 +110,7 @@ pub async fn forward_request(
         Err(_) => return Err(ProxyError::ResponseTimeout),
     }
 
-    debug!(
-        bytes = response_buf.len(),
-        "received proxy response"
-    );
+    debug!(bytes = response_buf.len(), "received proxy response");
 
     // Parse HTTP status line to extract real status code
     let status_code = parse_status_code(&response_buf).unwrap_or(StatusCode::BAD_GATEWAY);
@@ -129,16 +126,16 @@ pub async fn forward_request(
 fn parse_status_code(response: &[u8]) -> Option<StatusCode> {
     // Convert to string to parse status line
     let response_str = std::str::from_utf8(response).ok()?;
-    
+
     // Find first line (status line)
     let status_line = response_str.lines().next()?;
-    
+
     // Parse format: "HTTP/1.1 200 OK"
     let parts: Vec<&str> = status_line.split_whitespace().collect();
     if parts.len() < 2 {
         return None;
     }
-    
+
     // Second part should be the status code
     let code: u16 = parts[1].parse().ok()?;
     StatusCode::from_u16(code).ok()

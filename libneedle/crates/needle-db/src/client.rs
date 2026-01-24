@@ -54,11 +54,7 @@ impl SupabaseClient {
     /// Inserts one or more rows into a table. The `body` should be a JSON
     /// object (single row) or array (multiple rows). Returns the inserted
     /// data with any database-generated fields like `id` and timestamps.
-    pub async fn insert(
-        &self,
-        table: &str,
-        body: &Value,
-    ) -> Result<Value, reqwest::Error> {
+    pub async fn insert(&self, table: &str, body: &Value) -> Result<Value, reqwest::Error> {
         debug!(table, "inserting into supabase");
 
         let response = self

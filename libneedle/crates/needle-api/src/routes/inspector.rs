@@ -1,10 +1,10 @@
 // Author : Eshan Roy <eshanized@proton.me>
 // SPDX-License-Identifier: MIT
 
+use axum::Json;
 use axum::extract::{Extension, Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::Json;
 use serde::Deserialize;
 use tracing::error;
 
@@ -29,12 +29,18 @@ pub async fn list_requests(
     let limit = query.limit.unwrap_or(50).min(200);
 
     match requests::find_recent(&state.db, &tunnel_id, limit).await {
-        Ok(reqs) => {
-            (StatusCode::OK, Json(serde_json::json!({ "requests": reqs }))).into_response()
-        }
+        Ok(reqs) => (
+            StatusCode::OK,
+            Json(serde_json::json!({ "requests": reqs })),
+        )
+            .into_response(),
         Err(e) => {
             error!(error = %e, "failed to fetch tunnel requests");
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": "failed to fetch requests" }))).into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({ "error": "failed to fetch requests" })),
+            )
+                .into_response()
         }
     }
 }

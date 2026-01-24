@@ -5,7 +5,7 @@ use axum::extract::{Request, State};
 use axum::http::StatusCode;
 use axum::middleware::Next;
 use axum::response::Response;
-use jsonwebtoken::{decode, DecodingKey, Validation};
+use jsonwebtoken::{DecodingKey, Validation, decode};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -43,8 +43,8 @@ pub async fn require_auth(
     let key = DecodingKey::from_secret(state.jwt_secret.as_bytes());
     let validation = Validation::default();
 
-    let token_data = decode::<Claims>(token, &key, &validation)
-        .map_err(|_| StatusCode::UNAUTHORIZED)?;
+    let token_data =
+        decode::<Claims>(token, &key, &validation).map_err(|_| StatusCode::UNAUTHORIZED)?;
 
     request.extensions_mut().insert(token_data.claims);
 

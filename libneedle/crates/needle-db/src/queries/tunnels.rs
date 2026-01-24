@@ -6,10 +6,7 @@ use crate::models::Tunnel;
 use needle_common::error::{NeedleError, Result};
 use serde_json::json;
 
-pub async fn find_by_subdomain(
-    client: &SupabaseClient,
-    subdomain: &str,
-) -> Result<Option<Tunnel>> {
+pub async fn find_by_subdomain(client: &SupabaseClient, subdomain: &str) -> Result<Option<Tunnel>> {
     let response = client
         .select(
             "tunnels",
@@ -18,8 +15,8 @@ pub async fn find_by_subdomain(
         .await
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
-    let tunnels: Vec<Tunnel> = serde_json::from_value(response)
-        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
+    let tunnels: Vec<Tunnel> =
+        serde_json::from_value(response).map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     Ok(tunnels.into_iter().next())
 }
@@ -55,8 +52,8 @@ pub async fn create(
         .await
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
-    let tunnels: Vec<Tunnel> = serde_json::from_value(response)
-        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
+    let tunnels: Vec<Tunnel> =
+        serde_json::from_value(response).map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     tunnels
         .into_iter()
@@ -64,11 +61,7 @@ pub async fn create(
         .ok_or_else(|| NeedleError::Supabase("insert returned no rows".to_string()))
 }
 
-pub async fn set_active(
-    client: &SupabaseClient,
-    subdomain: &str,
-    active: bool,
-) -> Result<()> {
+pub async fn set_active(client: &SupabaseClient, subdomain: &str, active: bool) -> Result<()> {
     client
         .update(
             "tunnels",

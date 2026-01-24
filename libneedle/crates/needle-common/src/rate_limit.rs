@@ -105,6 +105,9 @@ mod tests {
             }
         }
 
-        assert!(allowed <= 3, "should not exceed burst size even after long wait");
+        assert!(
+            allowed <= 3,
+            "should not exceed burst size even after long wait"
+        );
     }
 }

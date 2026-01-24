@@ -1,9 +1,9 @@
 // Author : Eshan Roy <eshanized@proton.me>
 // SPDX-License-Identifier: MIT
 
-use needle_common::error::{NeedleError, Result};
 use crate::client::SupabaseClient;
 use crate::models::ApiKey;
+use needle_common::error::{NeedleError, Result};
 use serde_json::json;
 use tracing::info;
 
@@ -15,8 +15,8 @@ pub async fn find_by_user(client: &SupabaseClient, user_id: &str) -> Result<Vec<
         .await
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
-    let keys: Vec<ApiKey> = serde_json::from_value(value)
-        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
+    let keys: Vec<ApiKey> =
+        serde_json::from_value(value).map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     Ok(keys)
 }
@@ -43,8 +43,8 @@ pub async fn create(
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     // supabase returns an array, grab the first item
-    let keys: Vec<ApiKey> = serde_json::from_value(value)
-        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
+    let keys: Vec<ApiKey> =
+        serde_json::from_value(value).map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     keys.into_iter()
         .next()
@@ -52,11 +52,7 @@ pub async fn create(
 }
 
 /// Deletes an API key, but only if it belongs to the given user.
-pub async fn delete(
-    client: &SupabaseClient,
-    user_id: &str,
-    key_id: &str,
-) -> Result<()> {
+pub async fn delete(client: &SupabaseClient, user_id: &str, key_id: &str) -> Result<()> {
     client
         .delete(
             "api_keys",
@@ -73,17 +69,14 @@ pub async fn delete(
 }
 
 /// Looks up an API key by its hash for authentication purposes.
-pub async fn find_by_hash(
-    client: &SupabaseClient,
-    key_hash: &str,
-) -> Result<Option<ApiKey>> {
+pub async fn find_by_hash(client: &SupabaseClient, key_hash: &str) -> Result<Option<ApiKey>> {
     let value = client
         .select("api_keys", &[("key_hash", &format!("eq.{key_hash}"))])
         .await
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
-    let keys: Vec<ApiKey> = serde_json::from_value(value)
-        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
+    let keys: Vec<ApiKey> =
+        serde_json::from_value(value).map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     Ok(keys.into_iter().next())
 }

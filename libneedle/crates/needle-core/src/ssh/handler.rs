@@ -33,10 +33,7 @@ pub struct SshSession {
 }
 
 impl SshSession {
-    pub fn new(
-        tunnel_manager: Arc<RwLock<TunnelManager>>,
-        client_ip: String,
-    ) -> Self {
+    pub fn new(tunnel_manager: Arc<RwLock<TunnelManager>>, client_ip: String) -> Self {
         Self {
             tunnel_manager,
             client_ip,
@@ -60,7 +57,7 @@ impl SshSession {
 
         // Extract API key from username (format: user_<KEY>)
         let api_key = username.strip_prefix("user_")?;
-        
+
         // Validate key format (64 hex chars)
         if api_key.len() != 64 || !api_key.chars().all(|c| c.is_ascii_hexdigit()) {
             warn!("invalid api key format in username");
@@ -124,7 +121,7 @@ impl Handler for SshSession {
         _public_key: &russh_keys::key::PublicKey,
     ) -> Result<Auth, Self::Error> {
         info!(user = %user, ip = %self.client_ip, "ssh auth attempt");
-        
+
         if let Some(user_id) = self.validate_api_key(user).await {
             self.user_id = Some(user_id);
             info!(user_id = %user_id, "ssh authentication successful");
@@ -179,10 +176,10 @@ impl Handler for SshSession {
             .create(
                 &self.client_ip,
                 user_id,
-                None,                       // No custom subdomain for SSH tunnels
-                *port as i32,               // Use requested port
-                "http",                     // Default protocol
-                false,                      // SSH tunnels are not persistent
+                None,         // No custom subdomain for SSH tunnels
+                *port as i32, // Use requested port
+                "http",       // Default protocol
+                false,        // SSH tunnels are not persistent
             )
             .await
         {

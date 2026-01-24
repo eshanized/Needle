@@ -8,12 +8,15 @@ use serde_json::json;
 
 pub async fn find_by_email(client: &SupabaseClient, email: &str) -> Result<Option<User>> {
     let response = client
-        .select("users", &[("email", &format!("eq.{email}")), ("limit", "1")])
+        .select(
+            "users",
+            &[("email", &format!("eq.{email}")), ("limit", "1")],
+        )
         .await
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
-    let users: Vec<User> = serde_json::from_value(response)
-        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
+    let users: Vec<User> =
+        serde_json::from_value(response).map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     Ok(users.into_iter().next())
 }
@@ -24,8 +27,8 @@ pub async fn find_by_id(client: &SupabaseClient, id: &str) -> Result<Option<User
         .await
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
-    let users: Vec<User> = serde_json::from_value(response)
-        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
+    let users: Vec<User> =
+        serde_json::from_value(response).map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     Ok(users.into_iter().next())
 }
@@ -50,8 +53,8 @@ pub async fn create(
         .await
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
-    let users: Vec<User> = serde_json::from_value(response)
-        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
+    let users: Vec<User> =
+        serde_json::from_value(response).map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     users
         .into_iter()

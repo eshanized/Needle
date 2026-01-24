@@ -1,8 +1,8 @@
 // Author : Eshan Roy <eshanized@proton.me>
 // SPDX-License-Identifier: MIT
 
-use needle_common::error::{NeedleError, Result};
 use crate::client::SupabaseClient;
+use needle_common::error::{NeedleError, Result};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -37,8 +37,8 @@ pub async fn get_daily_stats(
         .await
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
-    let stats: Vec<DailyAnalytics> = serde_json::from_value(value)
-        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
+    let stats: Vec<DailyAnalytics> =
+        serde_json::from_value(value).map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     Ok(stats)
 }
@@ -51,7 +51,10 @@ pub async fn get_user_summary(
 ) -> Result<UserAnalyticsSummary> {
     // fetch the user's tunnels first
     let tunnels_value = client
-        .select("tunnels", &[("user_id", &format!("eq.{user_id}")), ("select", "id")])
+        .select(
+            "tunnels",
+            &[("user_id", &format!("eq.{user_id}")), ("select", "id")],
+        )
         .await
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 

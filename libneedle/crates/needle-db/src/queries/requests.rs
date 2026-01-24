@@ -1,9 +1,9 @@
 // Author : Eshan Roy <eshanized@proton.me>
 // SPDX-License-Identifier: MIT
 
-use needle_common::error::{NeedleError, Result};
 use crate::client::SupabaseClient;
 use crate::models::TunnelRequest;
+use needle_common::error::{NeedleError, Result};
 use serde_json::json;
 
 /// Fetches recent requests for a tunnel, ordered newest first.
@@ -25,8 +25,8 @@ pub async fn find_recent(
         .await
         .map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
-    let requests: Vec<TunnelRequest> = serde_json::from_value(value)
-        .map_err(|e| NeedleError::Supabase(e.to_string()))?;
+    let requests: Vec<TunnelRequest> =
+        serde_json::from_value(value).map_err(|e| NeedleError::Supabase(e.to_string()))?;
 
     Ok(requests)
 }

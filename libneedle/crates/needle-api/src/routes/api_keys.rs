@@ -1,10 +1,10 @@
 // Author : Eshan Roy <eshanized@proton.me>
 // SPDX-License-Identifier: MIT
 
+use axum::Json;
 use axum::extract::{Extension, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::Json;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -59,7 +59,11 @@ pub async fn list(
         }
         Err(e) => {
             error!(error = %e, "failed to list api keys");
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": "failed to list keys" }))).into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({ "error": "failed to list keys" })),
+            )
+                .into_response()
         }
     }
 }
@@ -89,7 +93,11 @@ pub async fn create(
         }
         Err(e) => {
             error!(error = %e, "failed to create api key");
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": "failed to create key" }))).into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({ "error": "failed to create key" })),
+            )
+                .into_response()
         }
     }
 }
@@ -105,7 +113,11 @@ pub async fn delete(
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(e) => {
             error!(error = %e, "failed to delete api key");
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": "failed to delete key" }))).into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({ "error": "failed to delete key" })),
+            )
+                .into_response()
         }
     }
 }

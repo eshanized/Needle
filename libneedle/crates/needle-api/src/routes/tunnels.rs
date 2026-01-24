@@ -1,11 +1,11 @@
 // Author : Eshan Roy <eshanized@proton.me>
 // SPDX-License-Identifier: MIT
 
+use axum::Extension;
+use axum::Json;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::Extension;
-use axum::Json;
 use serde::Deserialize;
 use serde_json::json;
 use tracing::info;

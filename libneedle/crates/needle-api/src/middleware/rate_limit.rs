@@ -1,11 +1,11 @@
 // Author : Eshan Roy <eshanized@proton.me>
 // SPDX-License-Identifier: MIT
 
+use axum::Json;
 use axum::extract::{ConnectInfo, Request, State};
 use axum::http::StatusCode;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::RwLock;

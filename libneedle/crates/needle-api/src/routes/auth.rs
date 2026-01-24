@@ -1,12 +1,12 @@
 // Author : Eshan Roy <eshanized@proton.me>
 // SPDX-License-Identifier: MIT
 
+use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::Json;
 use chrono::Utc;
-use jsonwebtoken::{encode, EncodingKey, Header};
+use jsonwebtoken::{EncodingKey, Header, encode};
 use serde::Deserialize;
 use serde_json::json;
 use tracing::info;
@@ -47,7 +47,7 @@ pub async fn register(
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(json!({ "error": "failed to hash password" })),
-            )
+            );
         }
     };
 
@@ -101,13 +101,13 @@ pub async fn login(
             return (
                 StatusCode::UNAUTHORIZED,
                 Json(json!({ "error": "invalid credentials" })),
-            )
+            );
         }
         Err(e) => {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(json!({ "error": e.to_string() })),
-            )
+            );
         }
     };
 
@@ -127,7 +127,7 @@ pub async fn login(
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(json!({ "error": "failed to create token" })),
-            )
+            );
         }
     };
 
@@ -176,8 +176,8 @@ fn create_token(
 }
 
 fn hash_password(password: &str) -> Result<String, argon2::password_hash::Error> {
-    use argon2::password_hash::rand_core::OsRng;
     use argon2::password_hash::SaltString;
+    use argon2::password_hash::rand_core::OsRng;
     use argon2::{Argon2, PasswordHasher};
 
     let salt = SaltString::generate(&mut OsRng);
