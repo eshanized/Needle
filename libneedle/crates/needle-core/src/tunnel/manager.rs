@@ -12,11 +12,6 @@ use tokio::net::TcpListener;
 use tracing::{info, warn};
 use uuid::Uuid;
 
-const MAX_TUNNELS_PER_IP: usize = 3;
-const MAX_TOTAL_TUNNELS: usize = 1000;
-const REQUESTS_PER_SECOND: f64 = 10.0;
-const BURST_SIZE: f64 = 20.0;
-
 pub struct ActiveTunnel {
     pub subdomain: String,
     pub listener: TcpListener,
@@ -37,14 +32,28 @@ pub struct TunnelManager {
     tunnels: HashMap<String, Arc<ActiveTunnel>>,
     ip_counts: HashMap<String, usize>,
     db: SupabaseClient,
+    max_tunnels_per_ip: usize,
+    global_tunnel_limit: usize,
+    requests_per_second: f64,
+    burst_size: f64,
 }
 
 impl TunnelManager {
-    pub fn new(db: SupabaseClient) -> Self {
+    pub fn new(
+        db: SupabaseClient,
+        max_tunnels_per_ip: usize,
+        global_tunnel_limit: usize,
+        requests_per_second: f64,
+        burst_size: f64,
+    ) -> Self {
         Self {
             tunnels: HashMap::new(),
             ip_counts: HashMap::new(),
             db,
+            max_tunnels_per_ip,
+            global_tunnel_limit,
+            requests_per_second,
+            burst_size,
         }
     }
 
@@ -65,10 +74,10 @@ impl TunnelManager {
         is_persistent: bool,
     ) -> Result<Arc<ActiveTunnel>> {
         let ip_count = self.ip_counts.get(client_ip).copied().unwrap_or(0);
-        if ip_count >= MAX_TUNNELS_PER_IP {
+        if ip_count >= self.max_tunnels_per_ip {
             return Err(NeedleError::MaxTunnelsPerIp);
         }
-        if self.tunnels.len() >= MAX_TOTAL_TUNNELS {
+        if self.tunnels.len() >= self.global_tunnel_limit {
             return Err(NeedleError::ServerAtCapacity);
         }
 
@@ -104,7 +113,7 @@ impl TunnelManager {
             bind_addr,
             client_ip: client_ip.to_string(),
             user_id,
-            rate_limiter: RateLimiter::new(REQUESTS_PER_SECOND, BURST_SIZE),
+            rate_limiter: RateLimiter::new(self.requests_per_second, self.burst_size),
         });
 
         self.tunnels.insert(sub.clone(), tunnel.clone());

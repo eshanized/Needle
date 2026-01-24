@@ -17,6 +17,7 @@ use needle_api::middleware::auth::require_auth;
 use needle_api::middleware::rate_limit;
 use needle_api::routes::{analytics, api_keys, auth, health, inspector, tunnels};
 use needle_api::state::AppState;
+use needle_core::config::NeedleConfig;
 use needle_core::tunnel::manager::TunnelManager;
 use needle_db::client::SupabaseClient;
 
@@ -43,7 +44,17 @@ async fn main() {
     let api_addr = env::var("API_ADDR").unwrap_or_else(|_| "0.0.0.0:3000".to_string());
 
     let db = SupabaseClient::new(&supabase_url, &supabase_anon_key, &supabase_service_key);
-    let tunnel_manager = Arc::new(RwLock::new(TunnelManager::new(db.clone())));
+    
+    // Load core configuration
+    let config = NeedleConfig::from_env();
+    
+    let tunnel_manager = Arc::new(RwLock::new(TunnelManager::new(
+        db.clone(),
+        config.max_tunnels_per_ip,
+        config.global_tunnel_limit,
+        10.0,  // requests_per_second - TODO: add to config
+        20.0,  // burst_size - TODO: add to config
+    )));
     let limiter_map = rate_limit::new_rate_limiter_map();
 
     let state = AppState {
