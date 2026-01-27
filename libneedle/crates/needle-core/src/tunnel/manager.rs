@@ -1,6 +1,7 @@
 // Author : Eshan Roy <eshanized@proton.me>
 // SPDX-License-Identifier: MIT
 
+use crate::metrics;
 use needle_common::error::{NeedleError, Result};
 use needle_common::rate_limit::RateLimiter;
 use needle_common::subdomain;
@@ -97,7 +98,8 @@ impl TunnelManager {
 
         info!(subdomain = %sub, addr = %bind_addr, "tunnel created");
 
-        needle_db::queries::tunnels::create(
+        // Attempt database write, rollback listener on failure
+        match needle_db::queries::tunnels::create(
             &self.db,
             &user_id.to_string(),
             &sub,
@@ -105,7 +107,16 @@ impl TunnelManager {
             protocol,
             is_persistent,
         )
-        .await?;
+        .await
+        {
+            Ok(_) => {},
+            Err(e) => {
+                // Rollback: close listener and return error
+                drop(listener);
+                metrics::error_occurred("tunnel_db_write_failed");
+                return Err(e);
+            }
+        }
 
         let tunnel = Arc::new(ActiveTunnel {
             subdomain: sub.clone(),
@@ -118,6 +129,9 @@ impl TunnelManager {
 
         self.tunnels.insert(sub.clone(), tunnel.clone());
         *self.ip_counts.entry(client_ip.to_string()).or_insert(0) += 1;
+
+        // Record metrics
+        metrics::tunnel_created(protocol);
 
         Ok(tunnel)
     }
@@ -137,6 +151,9 @@ impl TunnelManager {
 
             needle_db::queries::tunnels::set_active(&self.db, sub, false).await?;
             info!(subdomain = %sub, "tunnel removed");
+
+            // Record metrics
+            metrics::tunnel_destroyed("user_deleted");
         }
 
         Ok(())
