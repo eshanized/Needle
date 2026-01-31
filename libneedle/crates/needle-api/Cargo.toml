@@ -25,3 +25,4 @@ argon2 = { workspace = true }
 rand = { workspace = true }
 hex = { workspace = true }
 sha2 = "0.10"
+prometheus = { workspace = true }

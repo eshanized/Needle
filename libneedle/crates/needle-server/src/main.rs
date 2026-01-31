@@ -15,7 +15,7 @@ use tracing::info;
 
 use needle_api::middleware::auth::require_auth;
 use needle_api::middleware::rate_limit;
-use needle_api::routes::{analytics, api_keys, auth, health, inspector, tunnels};
+use needle_api::routes::{analytics, api_keys, auth, health, inspector, metrics, tunnels};
 use needle_api::state::AppState;
 use needle_core::config::NeedleConfig;
 use needle_core::tunnel::manager::TunnelManager;
@@ -67,6 +67,7 @@ async fn main() {
     // public routes -- no auth needed
     let public_routes = Router::new()
         .route("/health", get(health::check))
+        .route("/metrics", get(metrics::metrics))
         .route("/api/auth/register", post(auth::register))
         .route("/api/auth/login", post(auth::login));
 

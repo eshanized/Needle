@@ -6,4 +6,5 @@ pub mod api_keys;
 pub mod auth;
 pub mod health;
 pub mod inspector;
+pub mod metrics;
 pub mod tunnels;
