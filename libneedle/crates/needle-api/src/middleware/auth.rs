@@ -6,6 +6,7 @@ use axum::http::StatusCode;
 use axum::middleware::Next;
 use axum::response::Response;
 use jsonwebtoken::{DecodingKey, Validation, decode};
+use needle_core::metrics;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -34,17 +35,26 @@ pub async fn require_auth(
         .headers()
         .get("Authorization")
         .and_then(|v| v.to_str().ok())
-        .ok_or(StatusCode::UNAUTHORIZED)?;
+        .ok_or_else(|| {
+            metrics::auth_failure("api", "missing_header");
+            StatusCode::UNAUTHORIZED
+        })?;
 
     let token = auth_header
         .strip_prefix("Bearer ")
-        .ok_or(StatusCode::UNAUTHORIZED)?;
+        .ok_or_else(|| {
+            metrics::auth_failure("api", "invalid_header_format");
+            StatusCode::UNAUTHORIZED
+        })?;
 
     let key = DecodingKey::from_secret(state.jwt_secret.as_bytes());
     let validation = Validation::default();
 
     let token_data =
-        decode::<Claims>(token, &key, &validation).map_err(|_| StatusCode::UNAUTHORIZED)?;
+        decode::<Claims>(token, &key, &validation).map_err(|_| {
+            metrics::auth_failure("api", "invalid_token");
+            StatusCode::UNAUTHORIZED
+        })?;
 
     request.extensions_mut().insert(token_data.claims);
 

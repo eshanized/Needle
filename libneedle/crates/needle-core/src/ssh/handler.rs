@@ -1,6 +1,7 @@
 // Author : Eshan Roy <eshanized@proton.me>
 // SPDX-License-Identifier: MIT
 
+use crate::metrics;
 use crate::tunnel::manager::TunnelManager;
 use async_trait::async_trait;
 use russh::server::{Auth, Handler, Msg, Session};
@@ -128,6 +129,7 @@ impl Handler for SshSession {
             Ok(Auth::Accept)
         } else {
             warn!(user = %user, ip = %self.client_ip, "ssh authentication failed");
+            metrics::auth_failure("ssh", "invalid_key");
             Ok(Auth::Reject {
                 proceed_with_methods: Some(russh::MethodSet::PUBLICKEY),
             })
