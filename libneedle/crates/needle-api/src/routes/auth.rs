@@ -154,37 +154,22 @@ pub async fn revoke(
     Extension(claims): Extension<Claims>,
 ) -> impl IntoResponse {
     // Calculate token expiration for cleanup purposes
-    let expires_at = chrono::NaiveDateTime::from_timestamp_opt(claims.exp as i64, 0)
-        .map(|dt| chrono::DateTime::<Utc>::from_naive_utc_and_offset(dt, Utc))
+    let expires_at_timestamp = chrono::DateTime::<Utc>::from_timestamp(claims.exp as i64, 0)
         .expect("valid timestamp");
 
     // Insert into revoked_tokens table
     let body = json!({
         "jti": claims.jti,
         "user_id": claims.sub,
-        "expires_at": expires_at.to_rfc3339(),
+        "expires_at": expires_at_timestamp.to_rfc3339(),
     });
 
-    match state
-        .db
-        .client()
-        .from("revoked_tokens")
-        .insert(body.to_string())
-        .execute()
-        .await
-    {
-        Ok(response) if response.status().is_success() => {
+    match state.db.insert("revoked_tokens", &body).await {
+        Ok(_) => {
             info!(user_id = %claims.sub, jti = %claims.jti, "token revoked");
             (
                 StatusCode::OK,
                 Json(json!({ "message": "token revoked successfully" })),
-            )
-        }
-        Ok(response) => {
-            tracing::error!(status = ?response.status(), "failed to revoke token");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({ "error": "failed to revoke token" })),
             )
         }
         Err(e) => {

@@ -80,20 +80,12 @@ pub async fn require_auth(
 }
 
 /// Check if a token has been revoked by querying the revoked_tokens table
-async fn is_token_revoked(state: &AppState, jti: &str) -> Result<bool, reqwest::Error> {
+async fn is_token_revoked(state: &AppState, jti: &str) -> Result<bool, Box<dyn std::error::Error>> {
     let response = state
         .db
-        .client()
-        .from("revoked_tokens")
-        .select("jti")
-        .eq("jti", jti)
-        .execute()
-        .await?
-        .error_for_status()?;
+        .select("revoked_tokens", &[("jti", &format!("eq.{}", jti))])
+        .await?;
 
-    let body = response.text().await?;
-    let results: serde_json::Value = serde_json::from_str(&body).unwrap_or(serde_json::json!([]));
-    
     // If we got any results, the token is revoked
-    Ok(results.as_array().map(|arr| !arr.is_empty()).unwrap_or(false))
+    Ok(response.as_array().map(|arr| !arr.is_empty()).unwrap_or(false))
 }
