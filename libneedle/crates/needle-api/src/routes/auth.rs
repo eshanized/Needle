@@ -1,6 +1,7 @@
 // Author : Eshan Roy <eshanized@proton.me>
 // SPDX-License-Identifier: MIT
 
+use axum::extract::Extension;
 use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
@@ -10,6 +11,7 @@ use jsonwebtoken::{EncodingKey, Header, encode};
 use serde::Deserialize;
 use serde_json::json;
 use tracing::info;
+use uuid::Uuid;
 
 use crate::middleware::auth::Claims;
 use crate::state::AppState;
@@ -145,6 +147,56 @@ pub async fn login(
     )
 }
 
+/// Revoke the current user's JWT token
+/// Requires authentication - token is extracted from Claims extension
+pub async fn revoke(
+    State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
+) -> impl IntoResponse {
+    // Calculate token expiration for cleanup purposes
+    let expires_at = chrono::NaiveDateTime::from_timestamp_opt(claims.exp as i64, 0)
+        .map(|dt| chrono::DateTime::<Utc>::from_naive_utc_and_offset(dt, Utc))
+        .expect("valid timestamp");
+
+    // Insert into revoked_tokens table
+    let body = json!({
+        "jti": claims.jti,
+        "user_id": claims.sub,
+        "expires_at": expires_at.to_rfc3339(),
+    });
+
+    match state
+        .db
+        .client()
+        .from("revoked_tokens")
+        .insert(body.to_string())
+        .execute()
+        .await
+    {
+        Ok(response) if response.status().is_success() => {
+            info!(user_id = %claims.sub, jti = %claims.jti, "token revoked");
+            (
+                StatusCode::OK,
+                Json(json!({ "message": "token revoked successfully" })),
+            )
+        }
+        Ok(response) => {
+            tracing::error!(status = ?response.status(), "failed to revoke token");
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({ "error": "failed to revoke token" })),
+            )
+        }
+        Err(e) => {
+            tracing::error!(error = %e, "database error during token revocation");
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({ "error": "failed to revoke token" })),
+            )
+        }
+    }
+}
+
 /// Builds a signed JWT with user identity and tier info packed into the
 /// claims. The token expires after TOKEN_EXPIRY_HOURS so clients need
 /// to refresh periodically. We use HS256 here since the secret stays
@@ -161,11 +213,15 @@ fn create_token(
         .expect("valid timestamp")
         .timestamp() as usize;
 
+    // Generate unique JWT ID for revocation tracking
+    let jti = Uuid::new_v4().to_string();
+
     let claims = Claims {
         sub: user_id,
         email: email.to_string(),
         tier: tier.to_string(),
         exp: expiry,
+        jti,
     };
 
     encode(

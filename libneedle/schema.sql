@@ -104,6 +104,19 @@ create table if not exists analytics_daily (
 
 create index idx_analytics_daily_tunnel on analytics_daily (tunnel_id, date desc);
 
+-- revoked_tokens table
+-- tracks JWT tokens that have been explicitly revoked
+-- tokens are identified by jti (JWT ID) claim
+create table if not exists revoked_tokens (
+    jti text primary key,
+    user_id uuid not null references users(id) on delete cascade,
+    revoked_at timestamptz not null default now(),
+    expires_at timestamptz not null
+);
+
+create index idx_revoked_tokens_expires on revoked_tokens (expires_at);
+create index idx_revoked_tokens_user on revoked_tokens (user_id);
+
 -- row level security policies
 -- these ensure users can only see their own data through the api
 alter table users enable row level security;
@@ -111,6 +124,7 @@ alter table tunnels enable row level security;
 alter table tunnel_requests enable row level security;
 alter table api_keys enable row level security;
 alter table analytics_daily enable row level security;
+alter table revoked_tokens enable row level security;
 
 -- users can read/update their own row
 create policy "users_self_access" on users
@@ -135,6 +149,10 @@ create policy "analytics_owner_access" on analytics_daily
     for all using (
         tunnel_id in (select id from tunnels where user_id = auth.uid())
     );
+
+-- users can manage their own revoked tokens
+create policy "revoked_tokens_owner_access" on revoked_tokens
+    for all using (user_id = auth.uid());
 
 -- auto-update the updated_at column for users
 create or replace function update_updated_at()

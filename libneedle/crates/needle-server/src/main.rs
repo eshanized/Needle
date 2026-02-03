@@ -86,6 +86,7 @@ async fn main() {
             get(analytics::tunnel_stats),
         )
         .route("/api/analytics/summary", get(analytics::user_summary))
+        .route("/api/auth/revoke", post(auth::revoke))
         .layer(axum_mw::from_fn_with_state(state.clone(), require_auth));
 
     // Configure CORS - default to localhost for dev, require explicit origin for prod

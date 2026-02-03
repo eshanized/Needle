@@ -14,10 +14,11 @@ use crate::state::AppState;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Claims {
-    pub sub: Uuid,
+    pub sub: Uuid,       // user ID
     pub email: String,
     pub tier: String,
-    pub exp: usize,
+    pub exp: usize,       // expiration timestamp
+    pub jti: String,      // JWT ID for revocation
 }
 
 /// Pulls the JWT from the Authorization header, validates it, and
@@ -56,7 +57,43 @@ pub async fn require_auth(
             StatusCode::UNAUTHORIZED
         })?;
 
-    request.extensions_mut().insert(token_data.claims);
+    let claims = token_data.claims;
+
+    // Check if token is revoked
+    match is_token_revoked(&state, &claims.jti).await {
+        Ok(true) => {
+            metrics::auth_failure("api", "token_revoked");
+            return Err(StatusCode::UNAUTHORIZED);
+        },
+        Ok(false) => {}, // Token is valid, continue
+        Err(e) => {
+            tracing::error!(error = %e, "failed to check token revocation");
+            metrics::error_occurred("revocation_check_failed");
+            // Fail open - allow request if we can't check revocation
+            // In production you might want to fail closed
+        }
+    }
+
+    request.extensions_mut().insert(claims);
 
     Ok(next.run(request).await)
+}
+
+/// Check if a token has been revoked by querying the revoked_tokens table
+async fn is_token_revoked(state: &AppState, jti: &str) -> Result<bool, reqwest::Error> {
+    let response = state
+        .db
+        .client()
+        .from("revoked_tokens")
+        .select("jti")
+        .eq("jti", jti)
+        .execute()
+        .await?
+        .error_for_status()?;
+
+    let body = response.text().await?;
+    let results: serde_json::Value = serde_json::from_str(&body).unwrap_or(serde_json::json!([]));
+    
+    // If we got any results, the token is revoked
+    Ok(results.as_array().map(|arr| !arr.is_empty()).unwrap_or(false))
 }
