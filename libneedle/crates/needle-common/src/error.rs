@@ -50,6 +50,12 @@ pub enum NeedleError {
     #[error("configuration error: {0}")]
     Config(String),
 
+    #[error("tier limit exceeded: {tier} tier allows max {limit} tunnels")]
+    TierLimitExceeded { tier: String, limit: usize },
+
+    #[error("invalid SSH port: {port} (must be >= {min})")]
+    InvalidPort { port: u16, min: u16 },
+
     #[error(transparent)]
     Io(#[from] std::io::Error),
 
