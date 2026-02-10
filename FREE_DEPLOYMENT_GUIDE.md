@@ -120,6 +120,21 @@ If Oracle Cloud is too complex, **Fly.io** is much easier but costs ~$2/mo for a
 
 ---
 
+---
+
+## FAQ: Why not Render, Heroku, or Railway?
+
+You might prefer standard PaaS providers like Render, but they are **not suitable** for Needle's backend for two critical reasons:
+
+1.  **Blocker: TCP Ports**: Needle requires **two** open ports:
+    *   Port 3000 (HTTP) for the API
+    *   Port 2222 (SSH) for tunnels
+    Most free PaaS (Render, Heroku) only expose a **single HTTP port** (80/443). They do not support raw TCP traffic on arbitrary ports, which means your SSH tunnels would never connect.
+
+2.  **Blocker: State Sharing**: Needle stores tunnel state in memory (for speed). This requires the API and SSH server to run in the *same process*. You cannot deploy them as separate services on Render because they wouldn't share the tunnel state.
+
+**Oracle Cloud Always Free** is unique because it gives you a **Virtual Machine (VM)**. You control the firewall rules and can open any ports you want (like 2222), making it the only viable free option.
+
 ## Summary
 
 - **Frontend**: https://needle-ui.vercel.app (Free)
