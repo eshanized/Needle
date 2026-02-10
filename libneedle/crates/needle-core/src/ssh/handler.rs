@@ -187,7 +187,7 @@ impl Handler for SshSession {
     /// Handles the tcpip-forward request, which is how SSH reverse tunnels
     /// work. The client says "please forward traffic for port X to me" and
     /// we respond by creating a tunnel with a unique subdomain.
-    /// 
+    ///
     /// Now includes port validation to prevent abuse of privileged ports.
     async fn tcpip_forward(
         &mut self,
@@ -214,7 +214,7 @@ impl Handler for SshSession {
 
         // Validate port is allowed
         match Self::validate_port(*port) {
-            Ok(_) => {}, // Port is valid, continue
+            Ok(_) => {} // Port is valid, continue
             Err(e) => {
                 warn!(error = %e, requested_port = %port, "invalid port rejected");
                 metrics::error_occurred("ssh_invalid_port");

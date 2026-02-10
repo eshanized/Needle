@@ -1,8 +1,8 @@
 // Author : Eshan Roy <eshanized@proton.me>
 // SPDX-License-Identifier: MIT
 
-use axum::extract::Extension;
 use axum::Json;
+use axum::extract::Extension;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -154,8 +154,8 @@ pub async fn revoke(
     Extension(claims): Extension<Claims>,
 ) -> impl IntoResponse {
     // Calculate token expiration for cleanup purposes
-    let expires_at_timestamp = chrono::DateTime::<Utc>::from_timestamp(claims.exp as i64, 0)
-        .expect("valid timestamp");
+    let expires_at_timestamp =
+        chrono::DateTime::<Utc>::from_timestamp(claims.exp as i64, 0).expect("valid timestamp");
 
     // Insert into revoked_tokens table
     let body = json!({

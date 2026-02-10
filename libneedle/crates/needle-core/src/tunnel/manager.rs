@@ -75,7 +75,9 @@ impl TunnelManager {
         is_persistent: bool,
     ) -> Result<Arc<ActiveTunnel>> {
         // Count existing tunnels for this user to enforce per-user limits
-        let user_tunnel_count = self.tunnels.values()
+        let user_tunnel_count = self
+            .tunnels
+            .values()
             .filter(|t| t.user_id == user_id)
             .count();
 
@@ -83,7 +85,7 @@ impl TunnelManager {
         // TODO: Query actual user tier from database once queries::users::get_tier implemented
         // For now, enforce a reasonable per-user limit
         const DEFAULT_USER_TUNNEL_LIMIT: usize = 10;
-        
+
         if user_tunnel_count >= DEFAULT_USER_TUNNEL_LIMIT {
             warn!(
                 user_id = %user_id,
@@ -133,7 +135,7 @@ impl TunnelManager {
         )
         .await
         {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) => {
                 // Rollback: close listener and return error
                 drop(listener);

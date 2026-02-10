@@ -2,7 +2,7 @@
 # Author: Eshan Roy <eshanized@proton.me>
 # SPDX-License-Identifier: MIT
 
-.PHONY: help all clean build build-backend build-frontend dev dev-backend dev-frontend test test-backend test-frontend docker-build docker-up docker-down docker-clean install install-backend install-frontend format format-backend format-frontend lint lint-backend lint-frontend check
+.PHONY: help all clean build build-backend build-frontend build-docs dev dev-backend dev-frontend dev-docs test test-backend test-frontend docker-build docker-up docker-down docker-clean install install-backend install-frontend format format-backend format-frontend lint lint-backend lint-frontend check
 
 # Default target
 help:
@@ -34,9 +34,13 @@ help:
 	@echo "  make lint-backend     - Lint Rust code with cargo clippy"
 	@echo "  make lint-frontend    - Lint frontend code (if configured)"
 	@echo ""
+	@echo "Documentation Commands:"
+	@echo "  make build-docs       - Build mdBook documentation"
+	@echo "  make dev-docs         - Serve documentation locally"
+	@echo ""
 	@echo "Docker Commands:"
-	@echo "  make docker-build     - Build Docker images"
-	@echo "  make docker-up        - Start services with docker-compose"
+	@echo "  make docker-build     - Build Docker images (requires Dockerfiles)"
+	@echo "  make docker-up        - Start services with docker compose"
 	@echo "  make docker-down      - Stop services"
 	@echo "  make docker-clean     - Stop and remove containers, networks, and volumes"
 	@echo ""
@@ -62,6 +66,11 @@ build-frontend:
 	@echo "Building Vue.js frontend..."
 	cd needleui && npm run build
 
+build-docs:
+	@echo "Building mdBook documentation..."
+	@test -x ~/.cargo/bin/mdbook || { echo "ERROR: mdbook not found. Install with: cargo install mdbook"; exit 1; }
+	cd doc && ~/.cargo/bin/mdbook build
+
 # Development targets
 dev-backend:
 	@echo "Starting Rust backend server..."
@@ -74,7 +83,12 @@ dev-frontend:
 dev:
 	@echo "Starting both backend and frontend in dev mode..."
 	@echo "Note: Run 'make dev-backend' and 'make dev-frontend' in separate terminals"
-	@echo "Or use docker-compose for integrated development"
+	@echo "Or use docker compose for integrated development"
+
+dev-docs:
+	@echo "Serving mdBook documentation locally..."
+	@test -x ~/.cargo/bin/mdbook || { echo "ERROR: mdbook not found. Install with: cargo install mdbook"; exit 1; }
+	cd doc && ~/.cargo/bin/mdbook serve --open
 
 # Test targets
 test: test-backend test-frontend
@@ -116,19 +130,21 @@ lint-frontend:
 # Docker targets
 docker-build:
 	@echo "Building Docker images..."
-	docker-compose build
+	@test -f libneedle/Dockerfile || { echo "ERROR: libneedle/Dockerfile not found"; exit 1; }
+	@test -f needleui/Dockerfile || { echo "ERROR: needleui/Dockerfile not found"; exit 1; }
+	docker compose build
 
 docker-up:
-	@echo "Starting services with docker-compose..."
-	docker-compose up -d
+	@echo "Starting services with docker compose..."
+	docker compose up -d
 
 docker-down:
 	@echo "Stopping services..."
-	docker-compose down
+	docker compose down
 
 docker-clean:
 	@echo "Cleaning up Docker resources..."
-	docker-compose down -v --remove-orphans
+	docker compose down -v --remove-orphans
 
 # Installation targets
 install: install-backend install-frontend
@@ -146,4 +162,5 @@ clean:
 	@echo "Cleaning build artifacts..."
 	cd libneedle && cargo clean
 	cd needleui && rm -rf dist node_modules/.vite
+	cd doc && rm -rf book
 	@echo "Clean complete!"

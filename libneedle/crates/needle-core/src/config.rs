@@ -34,16 +34,16 @@ pub struct NeedleConfig {
     pub ssh_addr: String,
     pub max_tunnels_per_ip: usize,
     pub global_tunnel_limit: usize,
-    
+
     // HTTP proxy timeouts
     pub http_read_timeout: Duration,
     pub http_write_timeout: Duration,
-    
+
     // Tier limits
     pub free_tier_limit: usize,
     pub pro_tier_limit: usize,
     pub enterprise_tier_limit: usize,
-    
+
     // SSH security
     pub min_ssh_port: u16,
 }
@@ -64,16 +64,24 @@ impl NeedleConfig {
             api_addr: env::var("API_ADDR").unwrap_or_else(|_| DEFAULT_API_ADDR.to_string()),
             ssh_addr: env::var("SSH_ADDR").unwrap_or_else(|_| DEFAULT_SSH_ADDR.to_string()),
             max_tunnels_per_ip: parse_usize_env("MAX_TUNNELS_PER_IP", DEFAULT_MAX_TUNNELS_PER_IP),
-            global_tunnel_limit: parse_usize_env("GLOBAL_TUNNEL_LIMIT", DEFAULT_GLOBAL_TUNNEL_LIMIT),
-            http_read_timeout: Duration::from_secs(
-                parse_u64_env("HTTP_READ_TIMEOUT_SECS", DEFAULT_HTTP_TIMEOUT_SECS)
+            global_tunnel_limit: parse_usize_env(
+                "GLOBAL_TUNNEL_LIMIT",
+                DEFAULT_GLOBAL_TUNNEL_LIMIT,
             ),
-            http_write_timeout: Duration::from_secs(
-                parse_u64_env("HTTP_WRITE_TIMEOUT_SECS", DEFAULT_HTTP_TIMEOUT_SECS)
-            ),
+            http_read_timeout: Duration::from_secs(parse_u64_env(
+                "HTTP_READ_TIMEOUT_SECS",
+                DEFAULT_HTTP_TIMEOUT_SECS,
+            )),
+            http_write_timeout: Duration::from_secs(parse_u64_env(
+                "HTTP_WRITE_TIMEOUT_SECS",
+                DEFAULT_HTTP_TIMEOUT_SECS,
+            )),
             free_tier_limit: parse_usize_env("FREE_TIER_LIMIT", DEFAULT_FREE_TIER_LIMIT),
             pro_tier_limit: parse_usize_env("PRO_TIER_LIMIT", DEFAULT_PRO_TIER_LIMIT),
-            enterprise_tier_limit: parse_usize_env("ENTERPRISE_TIER_LIMIT", DEFAULT_ENTERPRISE_TIER_LIMIT),
+            enterprise_tier_limit: parse_usize_env(
+                "ENTERPRISE_TIER_LIMIT",
+                DEFAULT_ENTERPRISE_TIER_LIMIT,
+            ),
             min_ssh_port: parse_u16_env("MIN_SSH_PORT", MIN_ALLOWED_SSH_PORT),
         };
 
@@ -140,12 +148,18 @@ impl NeedleConfig {
             return Err("http_read_timeout must be > 0".to_string());
         }
         if self.http_read_timeout.as_secs() > 300 {
-            warn!("http_read_timeout is very high: {}s", self.http_read_timeout.as_secs());
+            warn!(
+                "http_read_timeout is very high: {}s",
+                self.http_read_timeout.as_secs()
+            );
         }
 
         // Validate SSH port restrictions
         if self.min_ssh_port < 1024 {
-            return Err(format!("min_ssh_port must be >= 1024, got {}", self.min_ssh_port));
+            return Err(format!(
+                "min_ssh_port must be >= 1024, got {}",
+                self.min_ssh_port
+            ));
         }
 
         Ok(())

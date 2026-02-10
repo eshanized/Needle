@@ -14,11 +14,11 @@ use crate::state::AppState;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Claims {
-    pub sub: Uuid,       // user ID
+    pub sub: Uuid, // user ID
     pub email: String,
     pub tier: String,
-    pub exp: usize,       // expiration timestamp
-    pub jti: String,      // JWT ID for revocation
+    pub exp: usize,  // expiration timestamp
+    pub jti: String, // JWT ID for revocation
 }
 
 /// Pulls the JWT from the Authorization header, validates it, and
@@ -41,21 +41,18 @@ pub async fn require_auth(
             StatusCode::UNAUTHORIZED
         })?;
 
-    let token = auth_header
-        .strip_prefix("Bearer ")
-        .ok_or_else(|| {
-            metrics::auth_failure("api", "invalid_header_format");
-            StatusCode::UNAUTHORIZED
-        })?;
+    let token = auth_header.strip_prefix("Bearer ").ok_or_else(|| {
+        metrics::auth_failure("api", "invalid_header_format");
+        StatusCode::UNAUTHORIZED
+    })?;
 
     let key = DecodingKey::from_secret(state.jwt_secret.as_bytes());
     let validation = Validation::default();
 
-    let token_data =
-        decode::<Claims>(token, &key, &validation).map_err(|_| {
-            metrics::auth_failure("api", "invalid_token");
-            StatusCode::UNAUTHORIZED
-        })?;
+    let token_data = decode::<Claims>(token, &key, &validation).map_err(|_| {
+        metrics::auth_failure("api", "invalid_token");
+        StatusCode::UNAUTHORIZED
+    })?;
 
     let claims = token_data.claims;
 
@@ -64,8 +61,8 @@ pub async fn require_auth(
         Ok(true) => {
             metrics::auth_failure("api", "token_revoked");
             return Err(StatusCode::UNAUTHORIZED);
-        },
-        Ok(false) => {}, // Token is valid, continue
+        }
+        Ok(false) => {} // Token is valid, continue
         Err(e) => {
             tracing::error!(error = %e, "failed to check token revocation");
             metrics::error_occurred("revocation_check_failed");
@@ -87,5 +84,8 @@ async fn is_token_revoked(state: &AppState, jti: &str) -> Result<bool, Box<dyn s
         .await?;
 
     // If we got any results, the token is revoked
-    Ok(response.as_array().map(|arr| !arr.is_empty()).unwrap_or(false))
+    Ok(response
+        .as_array()
+        .map(|arr| !arr.is_empty())
+        .unwrap_or(false))
 }
