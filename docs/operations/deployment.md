@@ -6,7 +6,7 @@ Production deployment guide for Needle.
 
 ## Quick Start
 
-See the [official DEPLOY.md](../../DEPLOY.md) for the most up-to-date deployment instructions.
+See the [Deployment Checklist](../reference/deploy.md) for a summary.
 
 ## Pre-Production Checklist
 

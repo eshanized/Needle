@@ -131,6 +131,11 @@ nav:
       - Troubleshooting: operations/troubleshooting.md
       - Production Certification: operations/production-certification.md
   
+  - Reference:
+      - Deployment Checklist: reference/deploy.md
+      - Production Certificate: reference/certificate.md
+      - Certification Standards: reference/production-certification.md
+
   - Appendix:
       - FAQ: appendix/faq.md
       - Glossary: appendix/glossary.md
