@@ -1,12 +1,12 @@
 # Production Certification
 
-Based on [CERTIFICATE.md](../../CERTIFICATE.md) and [PRODUCTION_CERTIFICATION.md](../../PRODUCTION_CERTIFICATION.md).
+Based on [CERTIFICATE.md](../reference/certificate.md) and [PRODUCTION_CERTIFICATION.md](../reference/production-certification.md).
 
 ## Current Status
 
 ❌ **NOT CERTIFIED FOR PRODUCTION**
 
-See the complete [CERTIFICATE.md](../../CERTIFICATE.md) audit report for detailed findings.
+See the complete [CERTIFICATE.md](../reference/certificate.md) audit report for detailed findings.
 
 ## Critical Blockers
 
@@ -131,6 +131,6 @@ Before production deployment, these **must** be fixed:
 
 ## See Also
 
-- [CERTIFICATE.md](../../CERTIFICATE.md) - Full audit report
-- [PRODUCTION_CERTIFICATION.md](../../PRODUCTION_CERTIFICATION.md) - Certification requirements
+- [CERTIFICATE.md](../reference/certificate.md) - Full audit report
+- [PRODUCTION_CERTIFICATION.md](../reference/production-certification.md) - Certification requirements
 - [Security](./security.md) - Security best practices
