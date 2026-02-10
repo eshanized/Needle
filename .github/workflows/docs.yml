@@ -1,4 +1,4 @@
-# Deploy mdBook Documentation to GitHub Pages
+# Deploy MkDocs Documentation to GitHub Pages
 # Author: Eshan Roy <eshanized@proton.me>
 # SPDX-License-Identifier: MIT
 
@@ -8,7 +8,8 @@ on:
   push:
     branches: [master]
     paths:
-      - 'doc/**'
+      - 'docs/**'
+      - 'mkdocs.yml'
       - '.github/workflows/docs.yml'
   workflow_dispatch:  # Allow manual trigger
 
@@ -30,20 +31,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup mdBook
-        uses: peaceiris/actions-mdbook@v2
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          mdbook-version: 'latest'
+          python-version: '3.x'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install mkdocs-material mkdocs-mermaid2-plugin
 
       - name: Build documentation
-        run: |
-          cd doc
-          mdbook build
+        run: mkdocs build --strict
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./doc/book
+          path: ./site
 
   deploy:
     name: Deploy to GitHub Pages

@@ -1,0 +1,151 @@
+# Needle Documentation
+# MkDocs configuration with Material theme
+# Author: Eshan Roy <eshanized@proton.me>
+# SPDX-License-Identifier: MIT
+
+site_name: Needle Documentation
+site_url: https://eshanized.github.io/Needle/
+site_description: Comprehensive user and developer documentation for Needle SSH tunneling service
+site_author: Eshan Roy
+repo_url: https://github.com/eshanized/Needle
+repo_name: eshanized/Needle
+edit_uri: edit/master/docs/
+
+# Theme configuration
+theme:
+  name: material
+  language: en
+  
+  # Everblush dark theme colors
+  palette:
+    - scheme: slate
+      primary: custom
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: custom
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - search.share
+    - toc.follow
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
+# Custom CSS for Everblush colors
+extra_css:
+  - stylesheets/extra.css
+
+# Plugins
+plugins:
+  - search:
+      lang: en
+      separator: '[\s\-\.]+'
+  - mermaid2:
+      version: 10.6.1
+
+# Markdown extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:mermaid2.fence_mermaid_custom
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Navigation structure
+nav:
+  - Home: index.md
+  - Quick Start: quick-start.md
+  
+  - User Guide:
+      - Installation: user-guide/installation.md
+      - Creating Tunnels: user-guide/creating-tunnels.md
+      - Configuration: user-guide/configuration.md
+      - Dashboard: user-guide/dashboard.md
+      - Authentication: user-guide/authentication.md
+  
+  - Developer Guide:
+      - Architecture: developer-guide/architecture.md
+      - Crate Overview: developer-guide/crate-overview.md
+      - Database Schema: developer-guide/database-schema.md
+      - API Reference: developer-guide/api-reference.md
+      - Testing: developer-guide/testing.md
+      - Contributing: developer-guide/contributing.md
+  
+  - Operations:
+      - Deployment: operations/deployment.md
+      - Monitoring: operations/monitoring.md
+      - Security: operations/security.md
+      - Troubleshooting: operations/troubleshooting.md
+      - Production Certification: operations/production-certification.md
+  
+  - Appendix:
+      - FAQ: appendix/faq.md
+      - Glossary: appendix/glossary.md
+      - License: appendix/license.md
+
+# Extra configuration
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/eshanized/Needle
+      name: GitHub Repository
+  
+  version:
+    provider: mike
+    default: latest
+
+# Copyright
+copyright: Copyright &copy; 2026 Eshan Roy

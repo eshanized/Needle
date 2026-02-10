@@ -67,9 +67,9 @@ build-frontend:
 	cd needleui && npm run build
 
 build-docs:
-	@echo "Building mdBook documentation..."
-	@test -x ~/.cargo/bin/mdbook || { echo "ERROR: mdbook not found. Install with: cargo install mdbook"; exit 1; }
-	cd doc && ~/.cargo/bin/mdbook build
+	@echo "Building MkDocs documentation..."
+	@test -d .venv || { echo "ERROR: Virtual environment not found. Run: python3 -m venv .venv && .venv/bin/pip install mkdocs-material mkdocs-mermaid2-plugin"; exit 1; }
+	.venv/bin/mkdocs build
 
 # Development targets
 dev-backend:
@@ -86,9 +86,9 @@ dev:
 	@echo "Or use docker compose for integrated development"
 
 dev-docs:
-	@echo "Serving mdBook documentation locally..."
-	@test -x ~/.cargo/bin/mdbook || { echo "ERROR: mdbook not found. Install with: cargo install mdbook"; exit 1; }
-	cd doc && ~/.cargo/bin/mdbook serve --open
+	@echo "Serving MkDocs documentation locally..."
+	@test -d .venv || { echo "ERROR: Virtual environment not found. Run: python3 -m venv .venv && .venv/bin/pip install mkdocs-material mkdocs-mermaid2-plugin"; exit 1; }
+	.venv/bin/mkdocs serve
 
 # Test targets
 test: test-backend test-frontend
@@ -162,5 +162,5 @@ clean:
 	@echo "Cleaning build artifacts..."
 	cd libneedle && cargo clean
 	cd needleui && rm -rf dist node_modules/.vite
-	cd doc && rm -rf book
+	rm -rf site
 	@echo "Clean complete!"

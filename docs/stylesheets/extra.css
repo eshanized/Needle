@@ -1,0 +1,123 @@
+/* Everblush Dark Theme Colors for MkDocs Material */
+
+:root {
+    /* Everblush color palette */
+    --everblush-bg: #141b1e;
+    --everblush-surface: #232a2d;
+    --everblush-red: #e57474;
+    --everblush-green: #8ccf7e;
+    --everblush-yellow: #e5c76b;
+    --everblush-blue: #67b0e8;
+    --everblush-magenta: #c47fd5;
+    --everblush-cyan: #6cbfbf;
+    --everblush-gray: #b3b9b8;
+    --everblush-fg: #dadada;
+}
+
+/* Dark mode overrides */
+[data-md-color-scheme="slate"] {
+    --md-primary-fg-color: var(--everblush-blue);
+    --md-primary-fg-color--light: var(--everblush-cyan);
+    --md-primary-fg-color--dark: #4a8ab8;
+    --md-primary-bg-color: var(--everblush-fg);
+    --md-primary-bg-color--light: #f5f5f5;
+
+    --md-accent-fg-color: var(--everblush-cyan);
+    --md-accent-fg-color--transparent: rgba(108, 191, 191, 0.1);
+    --md-accent-bg-color: var(--everblush-fg);
+    --md-accent-bg-color--light: #f5f5f5;
+
+    /* Background colors */
+    --md-default-bg-color: var(--everblush-bg);
+    --md-default-bg-color--light: var(--everblush-surface);
+    --md-default-bg-color--lighter: #2a3134;
+    --md-default-bg-color--lightest: #323a3d;
+
+    /* Foreground colors */
+    --md-default-fg-color: var(--everblush-fg);
+    --md-default-fg-color--light: var(--everblush-gray);
+    --md-default-fg-color--lighter: #8a9090;
+    --md-default-fg-color--lightest: #5a6060;
+
+    /* Code blocks */
+    --md-code-bg-color: var(--everblush-surface);
+    --md-code-fg-color: var(--everblush-fg);
+
+    /* Links */
+    --md-typeset-a-color: var(--everblush-blue);
+
+    /* Admonitions */
+    --md-admonition-bg-color: var(--everblush-surface);
+}
+
+/* Code block styling */
+.md-typeset code {
+    background-color: var(--everblush-surface);
+    color: var(--everblush-fg);
+    border-radius: 0.2rem;
+    padding: 0.1rem 0.3rem;
+}
+
+.md-typeset pre {
+    background-color: var(--everblush-surface);
+}
+
+.md-typeset pre code {
+    background-color: transparent;
+}
+
+/* Admonition colors */
+.md-typeset .admonition.note {
+    border-color: var(--everblush-blue);
+}
+
+.md-typeset .admonition.tip {
+    border-color: var(--everblush-green);
+}
+
+.md-typeset .admonition.warning {
+    border-color: var(--everblush-yellow);
+}
+
+.md-typeset .admonition.danger,
+.md-typeset .admonition.caution {
+    border-color: var(--everblush-red);
+}
+
+.md-typeset .admonition.important {
+    border-color: var(--everblush-magenta);
+}
+
+/* Tables */
+.md-typeset table:not([class]) {
+    border: 1px solid var(--everblush-gray);
+}
+
+.md-typeset table:not([class]) th {
+    background-color: var(--everblush-surface);
+    color: var(--everblush-fg);
+    border-bottom: 2px solid var(--everblush-blue);
+}
+
+.md-typeset table:not([class]) tr:hover {
+    background-color: var(--everblush-surface);
+}
+
+/* Search highlighting */
+.md-search-result__article--document {
+    background-color: var(--everblush-surface);
+}
+
+.md-search-result mark {
+    background-color: var(--everblush-yellow);
+    color: var(--everblush-bg);
+}
+
+/* Navigation */
+.md-nav__link--active {
+    color: var(--everblush-cyan);
+}
+
+.md-nav__link:hover {
+    color: var(--everblush-blue);
+}

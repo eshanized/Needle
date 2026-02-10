@@ -38,4 +38,12 @@ coverage/
 *.lcov
 tarpaulin-report.html
 PLAN.md
-book/
+site/
+.venv/
+
+# Node.js / VitePress
+node_modules/
+.vitepress/dist
+.vitepress/cache
+package-lock.json
+node_modules/
