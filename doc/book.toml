@@ -3,7 +3,6 @@ title = "Needle Documentation"
 authors = ["Eshan Roy <eshanized@proton.me>"]
 description = "Comprehensive documentation for Needle SSH tunneling service"
 language = "en"
-multilingual = false
 src = "src"
 
 [build]

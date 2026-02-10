@@ -38,3 +38,4 @@ coverage/
 *.lcov
 tarpaulin-report.html
 PLAN.md
+book/
