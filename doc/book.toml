@@ -14,7 +14,7 @@ create-missing = true
 default-theme = "navy"
 preferred-dark-theme = "navy"
 git-repository-url = "https://github.com/eshanized/needle"
-edit-url-template = "https://github.com/eshanized/needle/edit/main/doc/{path}"
+edit-url-template = "https://github.com/eshanized/needle/edit/master/doc/{path}"
 site-url = "/needle/"
 cname = ""
 
