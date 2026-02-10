@@ -1,9 +1,13 @@
-/* Everblush Dark Theme Colors for MkDocs Material */
+/* Everblush Dark Theme Colors for MkDocs Material with JetBrains Mono Nerd Font */
+
+/* Import JetBrains Mono Nerd Font */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 
 :root {
     /* Everblush color palette */
     --everblush-bg: #141b1e;
     --everblush-surface: #232a2d;
+    --everblush-surface-bright: #2a3134;
     --everblush-red: #e57474;
     --everblush-green: #8ccf7e;
     --everblush-yellow: #e5c76b;
@@ -12,6 +16,13 @@
     --everblush-cyan: #6cbfbf;
     --everblush-gray: #b3b9b8;
     --everblush-fg: #dadada;
+}
+
+/* Font configuration */
+* {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-variant-ligatures: normal;
+    font-feature-settings: "liga" 1, "calt" 1;
 }
 
 /* Dark mode overrides */
@@ -30,7 +41,7 @@
     /* Background colors */
     --md-default-bg-color: var(--everblush-bg);
     --md-default-bg-color--light: var(--everblush-surface);
-    --md-default-bg-color--lighter: #2a3134;
+    --md-default-bg-color--lighter: var(--everblush-surface-bright);
     --md-default-bg-color--lightest: #323a3d;
 
     /* Foreground colors */
@@ -45,79 +56,217 @@
 
     /* Links */
     --md-typeset-a-color: var(--everblush-blue);
+}
 
-    /* Admonitions */
-    --md-admonition-bg-color: var(--everblush-surface);
+/* Enhanced navigation styling */
+.md-nav {
+    font-size: 0.75rem;
+    line-height: 1.5;
+}
+
+.md-nav__title {
+    font-weight: 700;
+    color: var(--everblush-cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.65rem;
+    padding: 0.6rem 0.8rem;
+}
+
+.md-nav__link {
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.2rem;
+    transition: all 0.2s ease;
+}
+
+.md-nav__link:hover {
+    background-color: var(--everblush-surface);
+    color: var(--everblush-cyan);
+    transform: translateX(4px);
+}
+
+.md-nav__link--active {
+    background-color: var(--everblush-surface-bright);
+    color: var(--everblush-cyan);
+    border-left: 3px solid var(--everblush-cyan);
+    font-weight: 600;
 }
 
 /* Code block styling */
 .md-typeset code {
     background-color: var(--everblush-surface);
     color: var(--everblush-fg);
-    border-radius: 0.2rem;
-    padding: 0.1rem 0.3rem;
+    border-radius: 0.3rem;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.85em;
+    border: 1px solid rgba(103, 176, 232, 0.2);
 }
 
 .md-typeset pre {
     background-color: var(--everblush-surface);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(103, 176, 232, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .md-typeset pre code {
     background-color: transparent;
+    border: none;
+    padding: 0;
+}
+
+/* Enhanced headers */
+.md-typeset h1 {
+    color: var(--everblush-cyan);
+    font-weight: 700;
+    border-bottom: 2px solid var(--everblush-blue);
+    padding-bottom: 0.3em;
+    margin-bottom: 1em;
+}
+
+.md-typeset h2 {
+    color: var(--everblush-blue);
+    font-weight: 600;
+    border-bottom: 1px solid rgba(103, 176, 232, 0.3);
+    padding-bottom: 0.2em;
+}
+
+.md-typeset h3 {
+    color: var(--everblush-magenta);
+    font-weight: 600;
+}
+
+.md-typeset h4 {
+    color: var(--everblush-yellow);
+    font-weight: 600;
 }
 
 /* Admonition colors */
+.md-typeset .admonition {
+    border-radius: 0.5rem;
+    border-left: 4px solid;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 .md-typeset .admonition.note {
     border-color: var(--everblush-blue);
+    background-color: rgba(103, 176, 232, 0.1);
 }
 
 .md-typeset .admonition.tip {
     border-color: var(--everblush-green);
+    background-color: rgba(140, 207, 126, 0.1);
 }
 
 .md-typeset .admonition.warning {
     border-color: var(--everblush-yellow);
+    background-color: rgba(229, 199, 107, 0.1);
 }
 
 .md-typeset .admonition.danger,
 .md-typeset .admonition.caution {
     border-color: var(--everblush-red);
+    background-color: rgba(229, 116, 116, 0.1);
 }
 
 .md-typeset .admonition.important {
     border-color: var(--everblush-magenta);
+    background-color: rgba(196, 127, 213, 0.1);
 }
 
-/* Tables */
+/* Enhanced tables */
 .md-typeset table:not([class]) {
-    border: 1px solid var(--everblush-gray);
+    border: 1px solid rgba(103, 176, 232, 0.3);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .md-typeset table:not([class]) th {
-    background-color: var(--everblush-surface);
-    color: var(--everblush-fg);
+    background-color: var(--everblush-surface-bright);
+    color: var(--everblush-cyan);
     border-bottom: 2px solid var(--everblush-blue);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.85em;
 }
 
 .md-typeset table:not([class]) tr:hover {
     background-color: var(--everblush-surface);
+    transition: background-color 0.2s ease;
+}
+
+.md-typeset table:not([class]) td {
+    border-bottom: 1px solid rgba(103, 176, 232, 0.1);
 }
 
 /* Search highlighting */
 .md-search-result__article--document {
     background-color: var(--everblush-surface);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(103, 176, 232, 0.2);
 }
 
 .md-search-result mark {
     background-color: var(--everblush-yellow);
     color: var(--everblush-bg);
+    border-radius: 0.2rem;
+    padding: 0.1rem 0.2rem;
 }
 
-/* Navigation */
-.md-nav__link--active {
-    color: var(--everblush-cyan);
+/* Enhanced sidebar */
+.md-sidebar {
+    background: linear-gradient(180deg, var(--everblush-bg) 0%, var(--everblush-surface) 100%);
 }
 
-.md-nav__link:hover {
-    color: var(--everblush-blue);
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--everblush-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--everblush-blue);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--everblush-cyan);
+}
+
+/* Content area improvements */
+.md-content {
+    background: linear-gradient(135deg, var(--everblush-bg) 0%, #1a2124 100%);
+}
+
+/* Footer styling */
+.md-footer {
+    background: linear-gradient(90deg, var(--everblush-surface) 0%, var(--everblush-surface-bright) 100%);
+    border-top: 2px solid var(--everblush-blue);
+}
+
+/* Enhanced buttons */
+.md-button {
+    border-radius: 0.4rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.md-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(103, 176, 232, 0.3);
+}
+
+.md-button--primary {
+    background-color: var(--everblush-blue);
+    color: var(--everblush-bg);
+}
+
+.md-button--primary:hover {
+    background-color: var(--everblush-cyan);
 }

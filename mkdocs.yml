@@ -34,8 +34,6 @@ theme:
   features:
     - navigation.instant
     - navigation.tracking
-    - navigation.tabs
-    - navigation.tabs.sticky
     - navigation.sections
     - navigation.expand
     - navigation.top
@@ -44,9 +42,14 @@ theme:
     - search.highlight
     - search.share
     - toc.follow
+    - toc.integrate
     - content.code.copy
     - content.code.annotate
     - content.tabs.link
+  
+  font:
+    text: JetBrains Mono
+    code: JetBrains Mono
   
   icon:
     repo: fontawesome/brands/github
