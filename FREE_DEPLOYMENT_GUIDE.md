@@ -59,7 +59,7 @@ The backend needs to listen on port `2222` for SSH traffic. Most PaaS (Render/He
 ### A. Get the Server
 1. Sign up for [Oracle Cloud Free Tier](https://www.oracle.com/cloud/free/).
 2. Create a **VM instance**:
-   - **Image**: Canonical Ubuntu
+   - **Image**: **Canonical Ubuntu 24.04** or **22.04** Minimal (Always pick the "Minimal" or standard version, avoid old versions).
    - **Shape**: **VM.Standard.A1.Flex** (Ampere ARM). Select 4 OCPU and 24GB RAM (Yes, it's free!).
 3. Download the SSH key provided.
 4. Note the **Public IP Address**.
