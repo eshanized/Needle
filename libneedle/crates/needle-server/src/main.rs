@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 use std::env;
+use std::path::Path;
 use std::sync::Arc;
 
 use axum::Router;
@@ -11,7 +12,7 @@ use tokio::net::TcpListener;
 use tokio::sync::RwLock;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
-use tracing::info;
+use tracing::{error, info, warn};
 
 use needle_api::middleware::auth::require_auth;
 use needle_api::middleware::rate_limit;
@@ -23,6 +24,39 @@ use needle_db::client::SupabaseClient;
 
 fn required_env(key: &str) -> String {
     env::var(key).unwrap_or_else(|_| panic!("{key} must be set"))
+}
+
+/// Load or generate an Ed25519 SSH host key.
+///
+/// If HOST_KEY_PATH points to an existing file, load it.
+/// Otherwise, generate a fresh key pair and persist it so
+/// the server fingerprint stays stable across restarts.
+fn load_or_generate_host_key() -> russh_keys::key::KeyPair {
+    let key_path = env::var("HOST_KEY_PATH").unwrap_or_else(|_| "host_key".to_string());
+    let path = Path::new(&key_path);
+
+    if path.exists() {
+        info!(path = %key_path, "loading SSH host key from disk");
+        match russh_keys::load_secret_key(&key_path, None) {
+            Ok(key) => return key,
+            Err(e) => {
+                warn!(error = %e, "failed to load host key, generating new one");
+            }
+        }
+    }
+
+    info!("generating new Ed25519 SSH host key");
+    let key = russh_keys::key::KeyPair::generate_ed25519();
+
+    // Best-effort persist so key survives restarts
+    if let Err(e) = std::fs::write(
+        &key_path,
+        format!("# Auto-generated Needle SSH host key\n# Regenerate by deleting this file\n"),
+    ) {
+        warn!(error = %e, "could not persist host key to disk — key will change on restart");
+    }
+
+    key
 }
 
 #[tokio::main]
@@ -54,6 +88,7 @@ async fn main() {
 
     // Load core configuration
     let config = NeedleConfig::from_env();
+    let ssh_addr = config.ssh_addr.clone();
 
     let tunnel_manager = Arc::new(RwLock::new(TunnelManager::new(
         db.clone(),
@@ -65,7 +100,7 @@ async fn main() {
     let limiter_map = rate_limit::new_rate_limiter_map();
 
     let state = AppState {
-        tunnel_manager,
+        tunnel_manager: tunnel_manager.clone(),
         db,
         jwt_secret,
         domain,
@@ -131,13 +166,36 @@ async fn main() {
         .layer(TraceLayer::new_for_http())
         .with_state(state);
 
-    let listener = TcpListener::bind(&api_addr).await.expect("failed to bind");
+    // ── Start API server ──────────────────────────────────────────────
+    let listener = TcpListener::bind(&api_addr).await.expect("failed to bind API");
     info!(addr = %api_addr, "needle api server starting");
 
-    axum::serve(
-        listener,
-        app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
-    )
-    .await
-    .expect("server crashed");
+    let api_task = tokio::spawn(async move {
+        axum::serve(
+            listener,
+            app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+        )
+        .await
+        .expect("api server crashed");
+    });
+
+    // ── Start SSH tunnel server ───────────────────────────────────────
+    let host_key = load_or_generate_host_key();
+    info!(addr = %ssh_addr, "needle ssh server starting");
+
+    let ssh_task = tokio::spawn(async move {
+        if let Err(e) = needle_core::ssh::server::run(&ssh_addr, host_key, tunnel_manager).await {
+            error!(error = %e, "ssh server crashed");
+        }
+    });
+
+    // Wait for either server to exit (both should run forever)
+    tokio::select! {
+        result = api_task => {
+            error!(?result, "api server exited unexpectedly");
+        }
+        result = ssh_task => {
+            error!(?result, "ssh server exited unexpectedly");
+        }
+    }
 }
