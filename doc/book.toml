@@ -16,6 +16,8 @@ git-repository-url = "https://github.com/eshanized/needle"
 edit-url-template = "https://github.com/eshanized/needle/edit/master/doc/{path}"
 site-url = "/needle/"
 cname = ""
+additional-css = ["theme/custom.css"]
+additional-js = []
 
 [output.html.playground]
 editable = false
