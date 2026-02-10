@@ -52,36 +52,171 @@ Vercel gives you a `needle-frontend.vercel.app` domain. You can add your own in 
 
 ---
 
-## 3. Backend Deployment (Oracle Cloud)
+## 3. Backend Deployment (Oracle Cloud) - Detailed Guide
 
 The backend needs to listen on port `2222` for SSH traffic. Most PaaS (Render/Heroku/Vercel) cannot do this on free tiers. Oracle Cloud "Always Free" provides a powerful ARM VM (Ampere) that can.
 
-### A. Get the Server
-1. Sign up for [Oracle Cloud Free Tier](https://www.oracle.com/cloud/free/).
-2. Create a **VM instance**:
-   - **Image**: **Canonical Ubuntu 24.04** or **22.04** Minimal (Always pick the "Minimal" or standard version, avoid old versions).
-   - **Shape**: **VM.Standard.A1.Flex** (Ampere ARM). Select 4 OCPU and 24GB RAM (Yes, it's free!).
-3. Download the SSH key provided.
-4. Note the **Public IP Address**.
+---
 
-### B. Configure Network & Ports
-1. In Oracle Cloud Console, go to **Virtual Cloud Network (VCN)** -> **Security Lists**.
-2. Edit the Default Security List.
-3. Add **Ingress Rules**:
-   - **Source**: `0.0.0.0/0`
-   - **Protocol**: TCP
-   - **Destination Port Range**: `3000` (API), `2222` (SSH), `80`, `443`.
+### Step 1: Sign Up for Oracle Cloud
 
-### C. Deploy the Code
-SSH into your new server:
-`ssh -i ssh-key-202X.key ubuntu@<YOUR_PUBLIC_IP>`
+1. Go to [Oracle Cloud Free Tier](https://www.oracle.com/cloud/free/)
+2. Click **Start for free** and create an account
+3. **Important**: You'll need a credit card for verification, but you will NOT be charged
 
-Run these commands on the server:
+---
+
+### Step 2: Create a VM Instance
+
+Once logged into Oracle Cloud Console:
+
+1. **Navigate to Compute Instances**:
+   - Click the **☰** hamburger menu (top left)
+   - Go to **Compute** → **Instances**
+
+2. **Click "Create instance"** button
+
+3. **Configure the instance**:
+
+   **Name**: Enter `needle-backend` (or any name you prefer)
+
+   **Placement**:
+   - Leave as default (usually your home region)
+
+   **Image and shape**:
+   - Click **"Change Image"**
+   - Select **"Canonical Ubuntu"** from the list
+   - Choose **Ubuntu 24.04 Minimal** or **Ubuntu 22.04 Minimal**
+     - ⚠️ If you don't see 24.04, use 22.04 - both work perfectly
+   - Click **"Select Image"**
+
+   **Shape**:
+   - Click **"Change Shape"**
+   - Select **"Ampere"** (ARM processor - this is the free tier option)
+   - Choose **VM.Standard.A1.Flex**
+   - Set **OCPU count**: `4` (4 cores)
+   - Memory will auto-adjust to **24 GB** (This is all free!)
+   - Click **"Select Shape"**
+
+   **Networking**:
+   - Leave "Create new virtual cloud network" selected
+   - Leave all defaults (it will create a VCN for you)
+   - **✅ CRITICAL**: Make sure **"Assign a public IPv4 address"** is **CHECKED**
+
+   **Add SSH keys**:
+   - Select **"Generate SSH key pair"**
+   - Click **"Save Private Key"** - Download and keep this safe!
+   - Click **"Save Public Key"** (optional, but recommended as backup)
+
+4. **Click "Create"** at the bottom
+
+5. **Wait 2-3 minutes** for the instance to provision. Status will change from "PROVISIONING" to "RUNNING"
+
+6. **Copy the Public IP Address** - You'll see it under "Instance Access" → "Public IP address"
+
+---
+
+### Step 3: Open Required Ports (Security Lists)
+
+By default, Oracle Cloud blocks all ports except 22 (SSH). We need to open ports **3000** (API) and **2222** (SSH tunnels).
+
+1. **Navigate to your VCN**:
+   - From your instance page, scroll down to **"Primary VNIC"** section
+   - Click the **VCN name** (usually starts with "vcn-")
+
+2. **Go to Security Lists**:
+   - On the left sidebar, under **"Resources"**, click **"Security Lists"**
+   - Click the **"Default Security List for..."** link
+
+3. **Add Ingress Rules**:
+   - Click **"Add Ingress Rules"** button
+   
+   **Rule 1: API Port (3000)**
+   - Source CIDR: `0.0.0.0/0`
+   - IP Protocol: `TCP`
+   - Source Port Range: (leave blank)
+   - Destination Port Range: `3000`
+   - Description: `Needle API`
+   - Click **"Add Ingress Rules"**
+
+   **Rule 2: SSH Tunnel Port (2222)**
+   - Click **"Add Ingress Rules"** again
+   - Source CIDR: `0.0.0.0/0`
+   - IP Protocol: `TCP`
+   - Destination Port Range: `2222`
+   - Description: `Needle SSH Tunnels`
+   - Click **"Add Ingress Rules"**
+
+---
+
+### Step 4: SSH Into Your Server
+
+1. **Open your terminal** (Linux/Mac) or use **Git Bash/WSL** (Windows)
+
+2. **Set key permissions** (Linux/Mac only):
+   ```bash
+   chmod 400 ~/Downloads/ssh-key-*.key
+   ```
+
+3. **Connect to the server**:
+   ```bash
+   ssh -i ~/Downloads/ssh-key-*.key ubuntu@<YOUR_PUBLIC_IP>
+   ```
+   Replace `<YOUR_PUBLIC_IP>` with the IP you copied earlier.
+
+4. **Type "yes"** when asked if you want to continue connecting
+
+---
+
+### Step 5: Automated Setup (Recommended)
+
+Once connected to your server, run this **one-liner**:
 
 ```bash
-# 1. Update and install Docker
+curl -fsSL https://raw.githubusercontent.com/eshanized/Needle/master/setup_oracle.sh | bash
+```
+
+**What this script does**:
+1. Installs Docker and Docker Compose
+2. Clones the Needle repository
+3. Opens an editor for you to paste your Supabase credentials
+4. Starts the backend
+
+**During the script execution**:
+- When the editor opens (nano), fill in:
+  - `SUPABASE_URL` - Your Supabase project URL
+  - `SUPABASE_ANON_KEY` - From Supabase Settings → API
+  - `SUPABASE_SERVICE_ROLE_KEY` - From Supabase Settings → API (be careful, this is secret!)
+  - `JWT_SECRET` - Generate with: `openssl rand -hex 32`
+  - `DOMAIN` - Your Public IP or domain name
+- Press `Ctrl+X`, then `Y`, then `Enter` to save
+
+---
+
+### Step 6: Verify Deployment
+
+After the script completes, check if the backend is running:
+
+```bash
+curl http://localhost:3000/health
+```
+
+You should see: `{"status":"ok"}`
+
+**Your backend is now live at**:
+- API: `http://<YOUR_PUBLIC_IP>:3000`
+- SSH Tunnel Server: `<YOUR_PUBLIC_IP>:2222`
+
+---
+
+### (Optional) Manual Setup
+
+If you prefer to do it manually instead of using the script:
+
+```bash
+# 1. Install Docker
 sudo apt update
-sudo apt install -y docker.io docker-compose
+sudo apt install -y docker.io docker-compose-v2 git
 sudo usermod -aG docker $USER
 newgrp docker
 
@@ -90,14 +225,12 @@ git clone https://github.com/eshanized/Needle.git
 cd Needle
 
 # 3. Configure Environment
-# Create .env from example and fill in your Supabase keys
 cp libneedle/.env.example libneedle/.env
 nano libneedle/.env
-# EDIT: Set API_ADDR=0.0.0.0:3000, SSH_ADDR=0.0.0.0:2222, DOMAIN=<YOUR_IP_OR_DOMAIN>
+# Fill in your Supabase credentials
 
-# 4. Run with Docker Compose
-# (We need to update compose file to bind ports to host)
-docker compose up -d --build
+# 4. Start Backend (API service only, since UI is on Vercel)
+docker compose up -d --build api
 ```
 
 ### D. DNS (Optional but recommended)
