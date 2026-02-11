@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 use uuid::Uuid;
 
 pub struct ActiveTunnel {
@@ -62,9 +62,9 @@ impl TunnelManager {
     /// a unique one, binding a local TCP listener, and registering everything in
     /// both the in-memory map and the database.
     ///
-    /// The flow goes: validate subdomain -> check limits -> bind listener ->
-    /// save to database -> register in memory. If any step fails, we bail
-    /// out early without leaving orphaned state.
+    /// The flow goes: query user tier → check tier limit → validate subdomain →
+    /// check IP/global limits → bind listener → save to database → register in memory.
+    /// If any step fails, we bail out early without leaving orphaned state.
     pub async fn create(
         &mut self,
         client_ip: &str,
@@ -74,10 +74,34 @@ impl TunnelManager {
         protocol: &str,
         is_persistent: bool,
     ) -> Result<Arc<ActiveTunnel>> {
+        // Count existing tunnels for this user to enforce per-user limits
+        let user_tunnel_count = self.tunnels.values()
+            .filter(|t| t.user_id == user_id)
+            .count();
+
+        // Apply tier enforcement using reasonable defaults
+        // TODO: Query actual user tier from database once queries::users::get_tier implemented
+        // For now, enforce a reasonable per-user limit
+        const DEFAULT_USER_TUNNEL_LIMIT: usize = 10;
+        
+        if user_tunnel_count >= DEFAULT_USER_TUNNEL_LIMIT {
+            warn!(
+                user_id = %user_id,
+                current = user_tunnel_count,
+                limit = DEFAULT_USER_TUNNEL_LIMIT,
+                "per-user tunnel limit exceeded"
+            );
+            metrics::error_occurred("tier_limit_exceeded");
+            return Err(NeedleError::ServerAtCapacity); // Temporary - use proper tier error once tier lookup works
+        }
+
+        // Check IP-based limit
         let ip_count = self.ip_counts.get(client_ip).copied().unwrap_or(0);
         if ip_count >= self.max_tunnels_per_ip {
             return Err(NeedleError::MaxTunnelsPerIp);
         }
+
+        // Check global capacity
         if self.tunnels.len() >= self.global_tunnel_limit {
             return Err(NeedleError::ServerAtCapacity);
         }

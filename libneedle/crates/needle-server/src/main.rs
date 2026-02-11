@@ -36,6 +36,13 @@ async fn main() {
         )
         .init();
 
+    // Log version information for operational tracking
+    info!(
+        version = env!("CARGO_PKG_VERSION"),
+        name = env!("CARGO_PKG_NAME"),
+        "needle server starting"
+    );
+
     let supabase_url = required_env("SUPABASE_URL");
     let supabase_anon_key = required_env("SUPABASE_ANON_KEY");
     let supabase_service_key = required_env("SUPABASE_SERVICE_ROLE_KEY");
